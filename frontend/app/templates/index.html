@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-text">
+      <p class="eyebrow">{{ icon("sparkles", 16) }} Lecture de l'écriture manuscrite médicale</p>
+      <h1>Vos ordonnances manuscrites, <span class="accent">enfin lisibles.</span></h1>
+      <p class="lead">
+        Photographiez une ordonnance ou un bulletin de soins : MediTrust repère l'écriture,
+        la transcrit et vérifie chaque médicament dans les référentiels officiels tunisiens.
+      </p>
+      <div class="hero-cta">
+        {% if current_user.is_authenticated %}
+          <a class="btn btn-primary btn-lg" href="{{ url_for('outils.extraction') }}">{{ icon("camera", 20) }} Numériser un document</a>
+          <a class="btn btn-ghost btn-lg" href="{{ url_for('outils.dashboard') }}">Mon espace {{ icon("arrow-right", 18) }}</a>
+        {% else %}
+          <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">Commencer gratuitement {{ icon("arrow-right", 18) }}</a>
+          <a class="btn btn-ghost btn-lg" href="{{ url_for('auth.login') }}">J'ai déjà un compte</a>
+        {% endif %}
+      </div>
+      <ul class="hero-points">
+        <li>{{ icon("check", 18) }} Ordinateur, galerie ou appareil photo</li>
+        <li>{{ icon("check", 18) }} Texte modifiable et vérifiable</li>
+        <li>{{ icon("check", 18) }} Médicaments contrôlés (DPM, CNAM)</li>
+      </ul>
+    </div>
+
+    <div class="hero-visual" aria-hidden="true">
+      <div class="paper">
+        <div class="paper-head">
+          <strong>Dr Sami TRABELSI</strong>
+          <small>Médecine générale · Tunis</small>
+        </div>
+        <p class="paper-title">ORDONNANCE</p>
+        <p class="hand box">Augmentin 1g</p>
+        <p class="hand box indent">1 sachet x 3/j — 7 jours</p>
+        <p class="hand box">Doliprane 1000mg</p>
+        <p class="hand box indent">1 cp si douleur</p>
+        <span class="scanline"></span>
+      </div>
+      <div class="result">
+        <p class="result-title">{{ icon("sparkles", 16) }} Texte extrait</p>
+        <dl>
+          <div><dt>Médicament</dt><dd>AUGMENTIN 1 g</dd></div>
+          <div><dt>Posologie</dt><dd>1 sachet, 3 fois par jour, 7 jours</dd></div>
+          <div><dt>Médicament</dt><dd>DOLIPRANE 1000 mg</dd></div>
+          <div><dt>Posologie</dt><dd>1 comprimé si douleur</dd></div>
+        </dl>
+        <p class="badge badge-ok">{{ icon("shield-check", 14) }} 2 médicaments vérifiés</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if stats %}{# chiffres fournis par le backend ; section masquée s'il est arrêté #}
+<section class="stats" aria-label="Le référentiel en chiffres">
+  <div class="container stats-grid">
+    <div><strong>{{ "{:,}".format(stats.noms).replace(",", " ") }}</strong><span>médicaments référencés en Tunisie</span></div>
+    <div><strong>{{ "{:,}".format(stats.presentations).replace(",", " ") }}</strong><span>présentations autorisées (AMM)</span></div>
+    <div><strong>{{ stats.termes }}</strong><span>abréviations médicales reconnues</span></div>
+    <div><strong>3</strong><span>façons d'importer : PC, galerie, caméra</span></div>
+  </div>
+</section>
+{% endif %}
+
+<section id="etapes" class="section">
+  <div class="container">
+    <header class="section-head">
+      <p class="eyebrow">Comment ça marche</p>
+      <h2>De la photo au texte vérifié, en quatre étapes</h2>
+    </header>
+    <ol class="steps">
+      <li>
+        <span class="step-icon">{{ icon("camera") }}</span>
+        <h3>Importez</h3>
+        <p>Depuis votre ordinateur, la galerie de votre téléphone ou directement avec l'appareil photo.</p>
+      </li>
+      <li>
+        <span class="step-icon">{{ icon("scan") }}</span>
+        <h3>Détection</h3>
+        <p>Un modèle YOLOv8 repère chaque ligne manuscrite et la sépare de l'en-tête imprimé.</p>
+      </li>
+      <li>
+        <span class="step-icon">{{ icon("file-text") }}</span>
+        <h3>Lecture</h3>
+        <p>TrOCR, entraîné sur le vocabulaire médical tunisien, transcrit chaque ligne.</p>
+      </li>
+      <li>
+        <span class="step-icon">{{ icon("shield-check") }}</span>
+        <h3>Vérification</h3>
+        <p>Chaque médicament est contrôlé dans les listes officielles de la DPM et de la CNAM.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="fonctionnalites" class="section section-alt">
+  <div class="container">
+    <header class="section-head">
+      <p class="eyebrow">Fonctionnalités</p>
+      <h2>Tout ce qu'il faut pour vos documents médicaux</h2>
+    </header>
+    <div class="features">
+      <article class="feature">
+        <span class="feature-icon">{{ icon("pill") }}</span>
+        <h3>Ordonnances manuscrites</h3>
+        <p>Nom du médecin, médicaments, posologies et durées, même avec une écriture difficile.</p>
+      </article>
+      <article class="feature">
+        <span class="feature-icon">{{ icon("clipboard") }}</span>
+        <h3>Bulletins de soins</h3>
+        <p>Lecture du numéro de bulletin et des informations utiles au remboursement.</p>
+      </article>
+      <article class="feature">
+        <span class="feature-icon">{{ icon("alert") }}</span>
+        <h3>Détection de fraude</h3>
+        <p>Repère les documents suspects : cachet, signature ou montants incohérents.</p>
+      </article>
+      <article class="feature">
+        <span class="feature-icon">{{ icon("message") }}</span>
+        <h3>Assistant médical</h3>
+        <p>Une question sur un médicament ou une abréviation ? Réponse tirée des référentiels officiels.</p>
+      </article>
+      <article class="feature">
+        <span class="feature-icon">{{ icon("smartphone") }}</span>
+        <h3>Pensé pour le téléphone</h3>
+        <p>Prenez l'ordonnance en photo, le résultat s'affiche sur votre écran en quelques secondes.</p>
+      </article>
+      <article class="feature">
+        <span class="feature-icon">{{ icon("history") }}</span>
+        <h3>Historique</h3>
+        <p>Retrouvez, corrigez et réutilisez tous les documents que vous avez numérisés.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="securite" class="section">
+  <div class="container security">
+    <div>
+      <p class="eyebrow">Sécurité</p>
+      <h2>Vos documents vous appartiennent</h2>
+      <p class="lead">Les données médicales sont sensibles. MediTrust est conçu pour que vous gardiez la main.</p>
+    </div>
+    <ul class="security-list">
+      <li>{{ icon("lock") }}<div><h3>Accès protégé</h3><p>Mots de passe chiffrés, sessions sécurisées : vos documents ne sont visibles que par vous.</p></div></li>
+      <li>{{ icon("edit") }}<div><h3>Vous validez</h3><p>Chaque texte extrait peut être relu et corrigé avant d'être utilisé.</p></div></li>
+      <li>{{ icon("trash") }}<div><h3>Vous supprimez</h3><p>Un document et son image peuvent être effacés à tout moment.</p></div></li>
+    </ul>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container cta-box">
+    <img src="{{ url_for('static', filename='img/logo-icon.png') }}" alt="" width="56" height="61">
+    <div>
+      <h2>Prêt à numériser votre première ordonnance ?</h2>
+      <p>Créez votre compte en moins d'une minute.</p>
+    </div>
+    <a class="btn btn-light btn-lg" href="{{ url_for('outils.extraction') if current_user.is_authenticated else url_for('auth.register') }}">
+      {{ "Numériser un document" if current_user.is_authenticated else "Créer un compte" }} {{ icon("arrow-right", 18) }}
+    </a>
+  </div>
+</section>
+{% endblock %}

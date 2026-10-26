@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Secrets (clés d'API) : backend/.env, frontend/.env…
+.env
+
+# Poids des modèles (trop lourds pour git)
+backend/models/*
+!backend/models/.gitkeep
+
+# Frontend : base SQLite et images importées par les utilisateurs
+frontend/instance/
+
+# Ancienne version du projet (code, pages, résultats) : non publiée
+ancien_projet/
+frontend/anciennes_pages/
+
+# Notebooks
+notebooks
+
+# Outils locaux
+.deepeval/
+node_modules/
+frontend/dist/

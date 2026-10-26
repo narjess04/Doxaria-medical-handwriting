@@ -1,0 +1,19 @@
+{# Liste de documents : variable `docs` ou `recents`. #}
+<ul class="doc-list">
+  {% for d in (docs if docs is defined else recents) %}
+  <li>
+    <a class="doc-item" href="{{ url_for('outils.document', doc_id=d.id) }}">
+      <img src="{{ url_for('outils.fichier', nom=d.image) }}" alt="" loading="lazy" width="56" height="56">
+      <div class="doc-info">
+        <p class="doc-title">
+          {{ d.type_label }}{% if d.numero %} n° {{ d.numero }}{% endif %}
+          {% if d.demo %}<span class="badge badge-demo">Démo</span>{% endif %}
+        </p>
+        <p class="doc-meta">{{ d.medecin or "Médecin non détecté" }}</p>
+        <p class="doc-date">{{ d.created_at | date_locale }}</p>
+      </div>
+      {{ icon("arrow-right", 18) }}
+    </a>
+  </li>
+  {% endfor %}
+</ul>

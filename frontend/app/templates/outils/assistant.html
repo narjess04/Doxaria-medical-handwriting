@@ -1,0 +1,55 @@
+{% extends "outils/_layout.html" %}
+{% block title %}Assistant médical · MediTrust{% endblock %}
+
+{% block page %}
+<header class="page-head">
+  <div>
+    <h1>Assistant médical</h1>
+    <p class="muted">
+      Effets secondaires, interactions, contre-indications, analyse d'une ordonnance…
+      Les noms, DCI et remboursements viennent des référentiels officiels tunisiens (DPM, CNAM).
+    </p>
+  </div>
+  <button class="btn btn-outline btn-sm" type="button" data-reset-chat>{{ icon("history", 16) }} Nouvelle conversation</button>
+</header>
+
+{% if etat is none %}
+<div class="notice notice-demo" role="note">
+  {{ icon("alert", 20) }}
+  <div><strong>Backend arrêté.</strong> L'assistant fonctionne dans le backend : lancez-le avec <code>uvicorn main:app --port 8000</code> dans le dossier <code>backend</code>.</div>
+</div>
+{% elif not etat.llm %}
+<div class="notice notice-demo" role="note">
+  {{ icon("info", 20) }}
+  <div><strong>Mode simplifié.</strong> Aucune clé d'API n'est configurée dans <code>backend/.env</code> : l'assistant répond uniquement à partir des référentiels (fiche médicament, abréviations).</div>
+</div>
+{% endif %}
+
+<section class="card chat" data-chat="{{ url_for('outils.assistant_question') }}" data-question="{{ question }}">
+  <div class="chat-log" data-log aria-live="polite">
+    <div class="msg msg-bot" data-accueil>
+      <span class="msg-avatar"><img src="{{ url_for('static', filename='img/logo-icon.png') }}" alt="" width="22" height="24"></span>
+      <div class="msg-body">
+        <p>Bonjour {{ current_user.prenom }} ! Je réponds à vos questions sur les médicaments commercialisés en Tunisie et sur le vocabulaire médical.</p>
+        <div class="suggestions">
+          {% for s in ["Effets secondaires de l'Augmentin ?", "Analyse : Augmentin, Doliprane, Rhinathiol",
+                       "Puis-je prendre du Voltarène avec du Kardégic ?", "C'est quoi la NFS ?"] %}
+          <button type="button" class="chip" data-suggestion>{{ s }}</button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <form class="chat-form" data-form>
+    <label class="visually-hidden" for="question">Votre question</label>
+    <textarea id="question" name="question" rows="1" maxlength="1000" placeholder="Posez votre question…" required></textarea>
+    <button class="btn btn-primary" type="submit" aria-label="Envoyer">{{ icon("send", 18) }}</button>
+  </form>
+  <p class="chat-note muted small">{{ icon("info", 14) }} Information générale : elle ne remplace pas l'avis d'un médecin ou d'un pharmacien. Urgence : SAMU 190.</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" defer></script>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "auth/_layout.html" %}
+{% from "_forms.html" import champ with context %}
+{% block title %}Créer un compte · MediTrust{% endblock %}
+{% block aside_title %}Numérisez vos documents médicaux en toute confiance.{% endblock %}
+
+{% block form %}
+<h1>Créer un compte</h1>
+<p class="muted">Gratuit, en moins d'une minute.</p>
+<form method="post" novalidate>
+  {{ form.hidden_tag() }}
+  <div class="row-2">
+    {{ champ(form.prenom, "Mariem", "given-name") }}
+    {{ champ(form.nom, "Ben Ali", "family-name") }}
+  </div>
+  {{ champ(form.email, "vous@exemple.com", "email") }}
+  <div class="row-2">
+    {{ champ(form.telephone, "+216 20 000 000", "tel") }}
+    <div class="field">
+      {{ form.role.label }}
+      {{ form.role() }}
+    </div>
+  </div>
+  {{ champ(form.organisation, "Clinique, pharmacie, mutuelle…", "organization") }}
+  {{ champ(form.password, "8 caractères minimum", "new-password", "Au moins 8 caractères, dont une lettre et un chiffre.", password=true) }}
+  {{ champ(form.confirm, "Répétez le mot de passe", "new-password", password=true) }}
+  <div class="field{% if form.accept.errors %} has-error{% endif %}">
+    <label class="check">{{ form.accept() }} {{ form.accept.label.text }}</label>
+    {% for e in form.accept.errors %}<p class="error">{{ e }}</p>{% endfor %}
+  </div>
+  <button class="btn btn-primary btn-block" type="submit">Créer mon compte</button>
+</form>
+<p class="auth-switch">Déjà inscrit ? <a href="{{ url_for('auth.login') }}">Se connecter</a></p>
+{% endblock %}

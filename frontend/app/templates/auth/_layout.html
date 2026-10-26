@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{# Pages d'authentification : panneau bleu de présentation + formulaire. #}
+{% block body_class %}auth{% endblock %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <aside class="auth-aside">
+    <a class="auth-brand" href="{{ url_for('main.index') }}" aria-label="Retour à l'accueil">
+      <span class="auth-logo"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="MediTrust — Your health. Our priority." width="150" height="137"></span>
+    </a>
+    <h2>{% block aside_title %}{% endblock %}</h2>
+    <ul class="auth-points">
+      <li>{{ icon("camera", 20) }} Photographiez ordonnances et bulletins</li>
+      <li>{{ icon("file-text", 20) }} Obtenez un texte clair et modifiable</li>
+      <li>{{ icon("shield-check", 20) }} Médicaments vérifiés (DPM, CNAM)</li>
+      <li>{{ icon("lock", 20) }} Documents visibles par vous seul</li>
+    </ul>
+  </aside>
+
+  <section class="auth-main">
+    <a class="auth-back" href="{{ url_for('main.index') }}">{{ icon("arrow-right", 16) }} Accueil</a>
+    <div class="auth-card">
+      <img class="auth-card-logo" src="{{ url_for('static', filename='img/logo-icon.png') }}" alt="" width="44" height="48">
+      {% block form %}{% endblock %}
+    </div>
+  </section>
+</div>
+{% endblock %}

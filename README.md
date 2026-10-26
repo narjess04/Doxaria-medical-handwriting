@@ -1,0 +1,158 @@
+# MediTrust · Doxaria
+
+**Numérisation des documents médicaux manuscrits tunisiens.**
+Une photo d'ordonnance ou de bulletin de soins devient un texte structuré et
+vérifié : médecin, date, médicaments contrôlés dans les référentiels officiels
+(DPM, CNAM), détection de fraude, et un assistant médical pour comprendre un
+traitement.
+
+- **Site web** (Flask) utilisable sur ordinateur et téléphone : import depuis le PC, la galerie ou l'appareil photo.
+- **API** (FastAPI) qui regroupe la vision, l'OCR, les référentiels et l'assistant.
+- **Modèles** : CNN, YOLOv8, TrOCR, plus un modèle de langage pour l'assistant.
+
+## Fonctionnalités
+
+| Fonction | Ce qu'elle fait |
+|---|---|
+| **Type de document** | Un CNN distingue ordonnance et bulletin de soins (détection automatique). |
+| **Lecture d'ordonnance** | YOLOv8 repère les lignes, TrOCR les lit. Le médecin (zone « docteur ») et la date (zone « date ») sont isolés, et chaque ligne est corrigée avec le référentiel des médicaments et des termes médicaux. |
+| **Bulletin de soins** | YOLOv8 repère les 9 champs (n° de bulletin, CIN, adhérent, patient, signature…) et signale ceux qui manquent. |
+| **Vérification des médicaments** | Chaque médicament cité est retrouvé dans la liste des AMM (DPM) et des remboursements (CNAM) : DCI, classe, remboursement, prix. |
+| **Détection de fraude** | YOLOv8 repère le cachet et l'en-tête du médecin, puis on vérifie que le cachet porte bien le nom du médecin. |
+| **Assistant médical** | RAG : les fiches officielles des médicaments cités sont transmises à un modèle de langage, qui répond sur les effets indésirables, les interactions, la grossesse… et propose des hypothèses pour une ordonnance (jamais un diagnostic). |
+| **Espace personnel** | Comptes, historique, correction manuelle du texte, suppression des documents. |
+
+## Architecture
+
+```
+ Navigateur (PC / téléphone)
+        │
+        ▼
+ frontend/  Flask — pages, comptes, historique (SQLite)
+        │  HTTP (JSON)
+        ▼
+ backend/   FastAPI
+   ├─ /api/classify            CNN ordonnance / bulletin
+   ├─ /api/extract             YOLOv8 (lignes, médecin, date) → TrOCR → correction par le référentiel
+   ├─ /api/fraud               YOLOv8 cachet + en-tête → comparaison des noms
+   ├─ /api/medicaments/verifier
+   └─ /api/chat                RAG : référentiels data/ + modèle de langage (Groq / OpenRouter)
+        │
+        ▼
+ data/  référentiels officiels (CSV) · backend/models/  poids des modèles
+```
+
+## Modèles
+
+| Modèle | Rôle | Fichier (`backend/models/`) | Résultat à l'entraînement |
+|---|---|---|---|
+| CNN (3 convolutions) | ordonnance ou bulletin | `classification/cnn_ordonnance_bulletin.pt` | à compléter (notebook) |
+| YOLOv8n | lignes de texte | `yolo/lignes_texte.pt` | mAP50 0,929 |
+| YOLOv8n | date de l'ordonnance | `ordonnance/date_texte.pt` | mAP50 0,804 |
+| YOLOv8n | cachet + en-tête du médecin | `fraude/docteur_cachet.pt` | mAP50 0,886 |
+| YOLOv8n | 9 champs du bulletin | `bulletin/champs_bulletin.pt` | mAP50 0,995 |
+| TrOCR | lecture de l'écriture manuscrite | `trocr-doxaria/` | notebook 02 |
+
+**TrOCR.** Tant que le modèle fine-tuné (notebook 02) n'est pas dans
+`backend/models/trocr-doxaria/`, le backend utilise **TrOCR pré-entraîné**
+(`microsoft/trocr-base-handwritten`, environ 1,3 Go, téléchargé une seule fois).
+Il ne connaît ni le français médical ni les noms de médicaments : la correction
+par le référentiel rattrape une partie des erreurs, et le site invite à relire
+le texte. Le fine-tuning et la comparaison avec EasyOCR et Tesseract sont dans
+les [notebooks Colab](notebooks/README.md).
+
+## Données
+
+- [`data/medicaments/`](data/medicaments/README.md) : 6 053 présentations
+  autorisées (liste des AMM de la DPM) et 3 283 médicaments remboursés (CNAM),
+  avec leurs sources, leurs empreintes SHA-256 et le script de reconstruction.
+- [`data/termes_medicaux/`](data/termes_medicaux/README.md) : 262 termes et
+  abréviations médicales (ATCD, NFS, HTA, x3/j…).
+
+## Structure
+
+```
+Doxaria/
+├── backend/                   API FastAPI
+│   ├── main.py                point d'entrée (uvicorn)
+│   ├── .env                   clé du modèle de langage (non versionné)
+│   ├── app/
+│   │   ├── api/               routes et schémas
+│   │   ├── core/config.py     chemins des modèles, seuils, modèle de langage
+│   │   ├── chatbot/           RAG : référentiels, génération, réponses de repli
+│   │   └── pipeline/          prétraitement, CNN, YOLOv8, TrOCR, correction, fraude, bulletin
+│   ├── models/                poids des modèles (non versionnés)
+│   └── tests/
+├── frontend/                  site MediTrust (Flask)
+│   ├── app/                   comptes, outils, appels au backend, templates, CSS/JS
+│   └── tests/
+├── data/                      référentiels officiels
+├── notebooks/                 Colab : datasets, fine-tuning TrOCR, YOLOv8, comparaison des OCR
+└── scripts/                   construction des référentiels
+```
+
+## Installation
+
+Prérequis : Python 3.11 ou plus. Les modèles tournent sur processeur, sans
+carte graphique.
+
+```bash
+# 1. Backend — http://127.0.0.1:8000/docs (documentation interactive de l'API)
+cd backend
+python -m venv .venv
+.venv\Scripts\activate             # Windows ; macOS/Linux : source .venv/bin/activate
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
+uvicorn main:app --port 8000
+
+# 2. Frontend — http://127.0.0.1:5000 (dans un second terminal)
+cd frontend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python run.py
+```
+
+Les poids des modèles ne sont pas dans le dépôt : il faut les placer dans
+`backend/models/` (voir le tableau ci-dessus). `GET /api/health` indique ceux
+qui sont présents.
+
+### Configuration
+
+`backend/.env` (jamais versionné) :
+
+```ini
+LLM_API_KEY=...                                # clé Groq (ou OpenRouter)
+LLM_BASE_URL=https://api.groq.com/openai/v1    # OpenRouter : https://openrouter.ai/api/v1
+LLM_MODEL=openai/gpt-oss-120b
+```
+
+Sans clé, l'assistant répond à partir des seuls référentiels. Facultatif :
+[Tesseract](https://github.com/UB-Mannheim/tesseract/wiki), avec la langue
+française et `pip install pytesseract`, pour lire le texte du cachet (fraude) et
+le numéro de bulletin.
+
+Pour ouvrir le site depuis un téléphone du même réseau :
+`HOST=0.0.0.0 python run.py`, puis `http://<ip-du-pc>:5000`. Pour la caméra, le
+site doit être servi en HTTPS une fois déployé.
+
+## Tests
+
+```bash
+cd backend  && python -m pytest tests    # API, pipeline, RAG (modèles simulés + un test avec les vrais poids)
+cd frontend && python -m pytest tests    # comptes, documents, droits d'accès, backend arrêté
+```
+
+## Limites
+
+- Les résultats de lecture doivent être **relus par un professionnel de santé** ;
+  l'assistant ne pose pas de diagnostic.
+- Tant que TrOCR n'est pas fine-tuné, la lecture des ordonnances reste approximative.
+- Le référentiel DPM est un instantané de janvier 2024 (voir `data/medicaments/README.md`).
+- La base SQLite convient à une démonstration ; pour un usage réel, PostgreSQL
+  (variable `DATABASE_URL`) et un hébergement adapté aux données de santé.
+
+---
+
+Projet académique réalisé à **ESPRIT** (École Supérieure Privée d'Ingénierie et
+de Technologies, Tunisie) en collaboration avec la startup **Doxaria**, en 2025.

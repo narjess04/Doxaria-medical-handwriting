@@ -1,0 +1,106 @@
+{% from "_icons.html" import icon %}
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1565c0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}MediTrust · Vos documents médicaux, numérisés{% endblock %}</title>
+  <meta name="description" content="MediTrust numérise vos ordonnances manuscrites et vos bulletins de soins, et vérifie les médicaments dans les référentiels officiels tunisiens.">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+
+  {% block header %}
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="{{ url_for('outils.dashboard') if current_user.is_authenticated else url_for('main.index') }}" aria-label="MediTrust, accueil">
+        <img src="{{ url_for('static', filename='img/logo-icon.png') }}" alt="" width="32" height="35">
+        <span>MEDI<b>TRUST</b></span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Ouvrir le menu">
+        <span class="when-closed">{{ icon("menu") }}</span>
+        <span class="when-open">{{ icon("close") }}</span>
+      </button>
+
+      <nav id="menu" class="nav-menu" aria-label="Navigation principale">
+        <ul class="nav-links">
+          {% block nav_links %}
+          <li><a href="{{ url_for('main.index') }}#etapes">Comment ça marche</a></li>
+          <li><a href="{{ url_for('main.index') }}#fonctionnalites">Fonctionnalités</a></li>
+          <li><a href="{{ url_for('main.index') }}#securite">Sécurité</a></li>
+          {% endblock %}
+        </ul>
+        <div class="nav-actions">
+          {% if current_user.is_authenticated %}
+            {% block nav_user %}
+            <a class="btn btn-ghost" href="{{ url_for('outils.dashboard') }}">{{ icon("grid", 18) }} Mon espace</a>
+            {% endblock %}
+            <form method="post" action="{{ url_for('auth.logout') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-outline" type="submit" aria-label="Déconnexion">{{ icon("log-out", 18) }} <span class="btn-text">Déconnexion</span></button>
+            </form>
+          {% else %}
+            <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">Connexion</a>
+            <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Créer un compte</a>
+          {% endif %}
+        </div>
+      </nav>
+    </div>
+  </header>
+  {% endblock %}
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="container flashes" role="status">
+        {% for categorie, message in messages %}
+          <p class="flash flash-{{ categorie }}">{{ icon("info" if categorie == "info" else ("check" if categorie == "success" else "alert"), 18) }} {{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main id="contenu">{% block content %}{% endblock %}</main>
+
+  {% block footer %}
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="MediTrust — Your health. Our priority." width="120" height="110">
+        <p>La numérisation de vos documents médicaux, simple et vérifiable.</p>
+      </div>
+      <div>
+        <h3>Produit</h3>
+        <ul>
+          <li><a href="{{ url_for('main.index') }}#etapes">Comment ça marche</a></li>
+          <li><a href="{{ url_for('main.index') }}#fonctionnalites">Fonctionnalités</a></li>
+          <li><a href="{{ url_for('main.index') }}#securite">Sécurité</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Compte</h3>
+        <ul>
+          <li><a href="{{ url_for('auth.login') }}">Connexion</a></li>
+          <li><a href="{{ url_for('auth.register') }}">Créer un compte</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>© 2025 MediTrust · Projet académique ESPRIT × Doxaria</p>
+      <p>Les résultats de l'extraction doivent être vérifiés par un professionnel de santé.</p>
+    </div>
+  </footer>
+  {% endblock %}
+
+  <script src="{{ asset('js/main.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

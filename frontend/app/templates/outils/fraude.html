@@ -1,0 +1,44 @@
+{% extends "outils/_layout.html" %}
+{% block title %}Détection de fraude · MediTrust{% endblock %}
+
+{% block page %}
+<header class="page-head">
+  <div>
+    <h1>Détection de fraude</h1>
+    <p class="muted">Vérifiez qu'une ordonnance ou un bulletin n'a pas été falsifié. L'image n'est pas conservée.</p>
+  </div>
+</header>
+
+<form class="card upload-card" data-upload data-fraude="{{ url_for('outils.fraude_analyse') }}">
+  <input class="visually-hidden" type="file" name="image" id="image" accept="image/jpeg,image/png,image/webp" data-file>
+  <input class="visually-hidden" type="file" id="camera" accept="image/*" capture="environment" data-source>
+  <input class="visually-hidden" type="file" id="galerie" accept="image/*" data-source>
+
+  <div class="dropzone" data-dropzone>
+    <div class="dropzone-empty">
+      <span class="dropzone-icon">{{ icon("shield-check", 32) }}</span>
+      <p class="dropzone-title">Glissez le document à contrôler</p>
+      <p class="muted">JPG, PNG ou WebP · 10 Mo maximum</p>
+      <div class="sources">
+        <label class="btn btn-primary source-camera" for="camera">{{ icon("camera", 18) }} Prendre une photo</label>
+        <label class="btn btn-outline source-galerie" for="galerie">{{ icon("image", 18) }} Galerie</label>
+        <label class="btn btn-outline source-pc" for="image">{{ icon("upload", 18) }} Depuis l'ordinateur</label>
+      </div>
+    </div>
+    <div class="dropzone-preview" hidden>
+      <img alt="Aperçu du document" data-preview>
+      <div class="preview-bar">
+        <span class="preview-name" data-name></span>
+        <button type="button" class="btn btn-ghost btn-sm" data-reset>{{ icon("close", 16) }} Changer</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary btn-lg btn-block" type="submit" data-submit disabled>
+    <span class="label">{{ icon("scan", 18) }} Analyser le document</span>
+    <span class="spinner" aria-hidden="true"></span>
+  </button>
+
+  <div class="verdict" data-verdict hidden aria-live="polite"></div>
+</form>
+{% endblock %}

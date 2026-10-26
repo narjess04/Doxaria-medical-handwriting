@@ -1,0 +1,18 @@
+{# Champ de formulaire avec libellé, aide et message d'erreur. #}
+{% from "_icons.html" import icon %}
+{% macro champ(field, placeholder="", autocomplete="", hint="", password=false) %}
+<div class="field{% if field.errors %} has-error{% endif %}">
+  {{ field.label }}
+  <div class="input-wrap">
+    {{ field(placeholder=placeholder, autocomplete=autocomplete,
+             **({"aria-invalid": "true", "aria-describedby": field.id ~ "-err"} if field.errors else {})) }}
+    {% if password %}
+    <button type="button" class="toggle-password" data-target="{{ field.id }}" aria-label="Afficher le mot de passe">
+      {{ icon("eye", 18) }}
+    </button>
+    {% endif %}
+  </div>
+  {% if hint and not field.errors %}<p class="hint">{{ hint }}</p>{% endif %}
+  {% for e in field.errors %}<p class="error" id="{{ field.id }}-err">{{ e }}</p>{% endfor %}
+</div>
+{% endmacro %}

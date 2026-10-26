@@ -1,0 +1,263 @@
+terme,signification,categorie,source
+cp,comprimé,posologie,MSF
+gél,gélule,posologie,usage_courant
+amp,ampoule,posologie,usage_courant
+sach,sachet,posologie,usage_courant
+suppo,suppositoire,posologie,usage_courant
+gtt,goutte,posologie,usage_courant
+càc,cuillère à café,posologie,usage_courant
+càs,cuillère à soupe,posologie,usage_courant
+c. à mesure,cuillère-mesure,posologie,usage_courant
+x2/j,deux fois par jour,posologie,usage_courant
+x3/j,trois fois par jour,posologie,usage_courant
+/j,par jour,posologie,usage_courant
+/24h,par 24 heures,posologie,usage_courant
+J1,premier jour du traitement,posologie,MSF
+mat,matin,posologie,usage_courant
+matin et soir,,posologie,usage_courant
+au coucher,,posologie,usage_courant
+à jeun,,posologie,usage_courant
+avant les repas,,posologie,usage_courant
+après les repas,,posologie,usage_courant
+si besoin,,posologie,usage_courant
+si douleur,,posologie,usage_courant
+si fièvre,,posologie,usage_courant
+QSP,quantité suffisante pour,posologie,usage_courant
+pdt,pendant,posologie,usage_courant
+NR,non renouvelable,posologie,usage_courant
+AR,à renouveler,posologie,usage_courant
+bt,boîte,posologie,usage_courant
+fl,flacon,posologie,usage_courant
+tb,tube,posologie,usage_courant
+LP,libération prolongée,posologie,usage_courant
+PO,per os (voie orale),voie,MSF
+VO,voie orale,voie,usage_courant
+IV,intraveineuse,voie,MSF
+IVD,intraveineuse directe,voie,usage_courant
+IVL,intraveineuse lente,voie,usage_courant
+IM,intramusculaire,voie,MSF
+SC,sous-cutanée,voie,MSF
+IO,intraosseuse,voie,MSF
+VR,voie rectale,voie,usage_courant
+perf,perfusion,voie,usage_courant
+nébulisation,,voie,usage_courant
+inhalation,,voie,usage_courant
+application locale,,voie,usage_courant
+mg,milligramme,unite,MSF
+g,gramme,unite,MSF
+µg,microgramme,unite,usage_courant
+ml,millilitre,unite,MSF
+dl,décilitre,unite,MSF
+kg,kilogramme,unite,MSF
+UI,unité internationale,unite,MSF
+MUI,million d'unités internationales,unite,MSF
+mmol,millimole,unite,MSF
+mmHg,millimètre de mercure,unite,MSF
+kcal,kilocalorie,unite,MSF
+°C,degré Celsius,unite,MSF
+g/L,gramme par litre,unite,usage_courant
+mg/L,milligramme par litre,unite,usage_courant
+mmol/L,millimole par litre,unite,usage_courant
+µmol/L,micromole par litre,unite,usage_courant
+UI/L,unité internationale par litre,unite,usage_courant
+NFS,numération formule sanguine,examen_biologique,MSF
+ALAT,alanine aminotransférase,examen_biologique,MSF
+ASAT,aspartate aminotransférase,examen_biologique,MSF
+CRP,protéine C réactive,examen_biologique,usage_courant
+VS,vitesse de sédimentation,examen_biologique,usage_courant
+GAJ,glycémie à jeun,examen_biologique,usage_courant
+glycémie,,examen_biologique,usage_courant
+HbA1c,hémoglobine glyquée,examen_biologique,usage_courant
+créatininémie,créatinine sanguine,examen_biologique,usage_courant
+urée,,examen_biologique,usage_courant
+ionogramme,ionogramme sanguin,examen_biologique,usage_courant
+TSH,thyréostimuline,examen_biologique,usage_courant
+T4L,thyroxine libre,examen_biologique,usage_courant
+GGT,gamma-glutamyl transférase,examen_biologique,usage_courant
+PAL,phosphatases alcalines,examen_biologique,usage_courant
+bilirubine,,examen_biologique,usage_courant
+bilan lipidique,,examen_biologique,usage_courant
+CT,cholestérol total,examen_biologique,usage_courant
+HDL,cholestérol HDL,examen_biologique,usage_courant
+LDL,cholestérol LDL,examen_biologique,usage_courant
+TG,triglycérides,examen_biologique,usage_courant
+TP,taux de prothrombine,examen_biologique,usage_courant
+INR,international normalized ratio,examen_biologique,usage_courant
+TCA,temps de céphaline activée,examen_biologique,usage_courant
+ECBU,examen cytobactériologique des urines,examen_biologique,usage_courant
+BU,bandelette urinaire,examen_biologique,usage_courant
+PCR,amplification en chaîne par polymérase,examen_biologique,MSF
+sérologie,,examen_biologique,usage_courant
+β-HCG,hormone chorionique gonadotrope,examen_biologique,usage_courant
+ferritinémie,,examen_biologique,usage_courant
+fer sérique,,examen_biologique,usage_courant
+Hb,hémoglobine,examen_biologique,usage_courant
+GB,globules blancs,examen_biologique,usage_courant
+GR,globules rouges,examen_biologique,usage_courant
+PLQ,plaquettes,examen_biologique,usage_courant
+VGM,volume globulaire moyen,examen_biologique,usage_courant
+uricémie,acide urique sanguin,examen_biologique,usage_courant
+calcémie,,examen_biologique,usage_courant
+vitamine D,25-OH vitamine D,examen_biologique,usage_courant
+PSA,antigène prostatique spécifique,examen_biologique,usage_courant
+LCR,liquide céphalo-rachidien,examen_biologique,MSF
+protéinurie,,examen_biologique,usage_courant
+microalbuminurie,,examen_biologique,usage_courant
+DFG,débit de filtration glomérulaire,examen_biologique,usage_courant
+groupage sanguin,groupe ABO et rhésus,examen_biologique,usage_courant
+D-dimères,,examen_biologique,usage_courant
+troponine,,examen_biologique,usage_courant
+BNP,peptide natriurétique de type B,examen_biologique,usage_courant
+procalcitonine,,examen_biologique,usage_courant
+hémoculture,,examen_biologique,usage_courant
+coproculture,,examen_biologique,usage_courant
+ASLO,antistreptolysines O,examen_biologique,usage_courant
+ECG,électrocardiogramme,examen_imagerie,usage_courant
+RX thorax,radiographie du thorax,examen_imagerie,usage_courant
+écho,échographie,examen_imagerie,usage_courant
+échographie abdominale,,examen_imagerie,usage_courant
+TDM,tomodensitométrie (scanner),examen_imagerie,usage_courant
+IRM,imagerie par résonance magnétique,examen_imagerie,usage_courant
+EEG,électroencéphalogramme,examen_imagerie,usage_courant
+EMG,électromyogramme,examen_imagerie,usage_courant
+FOGD,fibroscopie œso-gastro-duodénale,examen_imagerie,usage_courant
+coloscopie,,examen_imagerie,usage_courant
+mammographie,,examen_imagerie,usage_courant
+ostéodensitométrie,,examen_imagerie,usage_courant
+ETT,échocardiographie transthoracique,examen_imagerie,usage_courant
+doppler,,examen_imagerie,usage_courant
+ASP,abdomen sans préparation,examen_imagerie,usage_courant
+EFR,explorations fonctionnelles respiratoires,examen_imagerie,usage_courant
+PL,ponction lombaire,examen_imagerie,MSF
+POCUS,échographie clinique,examen_imagerie,MSF
+ATCD,antécédents,pathologie,usage_courant
+HTA,hypertension artérielle,pathologie,MSF
+DT1,diabète de type 1,pathologie,usage_courant
+DT2,diabète de type 2,pathologie,usage_courant
+IC,insuffisance cardiaque,pathologie,MSF
+IRC,insuffisance rénale chronique,pathologie,usage_courant
+IRA,insuffisance rénale aiguë,pathologie,usage_courant
+AVC,accident vasculaire cérébral,pathologie,MSF
+IDM,infarctus du myocarde,pathologie,usage_courant
+SCA,syndrome coronarien aigu,pathologie,usage_courant
+FA,fibrillation auriculaire,pathologie,usage_courant
+OAP,œdème aigu du poumon,pathologie,MSF
+BPCO,bronchopneumopathie chronique obstructive,pathologie,usage_courant
+asthme,,pathologie,usage_courant
+TB,tuberculose,pathologie,MSF
+HIV,virus de l'immunodéficience humaine,pathologie,MSF
+CMV,cytomégalovirus,pathologie,MSF
+VHB,virus de l'hépatite B,pathologie,usage_courant
+VHC,virus de l'hépatite C,pathologie,usage_courant
+RGO,reflux gastro-œsophagien,pathologie,usage_courant
+UGD,ulcère gastro-duodénal,pathologie,usage_courant
+IU,infection urinaire,pathologie,usage_courant
+TVP,thrombose veineuse profonde,pathologie,usage_courant
+EP,embolie pulmonaire,pathologie,usage_courant
+HBP,hypertrophie bénigne de la prostate,pathologie,usage_courant
+angine,,pathologie,usage_courant
+rhinopharyngite,,pathologie,usage_courant
+otite,,pathologie,usage_courant
+sinusite,,pathologie,usage_courant
+bronchite,,pathologie,usage_courant
+pneumopathie,,pathologie,usage_courant
+gastro-entérite,,pathologie,usage_courant
+cystite,,pathologie,usage_courant
+dyslipidémie,,pathologie,usage_courant
+hypothyroïdie,,pathologie,usage_courant
+hyperthyroïdie,,pathologie,usage_courant
+anémie,,pathologie,usage_courant
+obésité,,pathologie,usage_courant
+lombalgie,,pathologie,usage_courant
+arthrose,,pathologie,usage_courant
+migraine,,pathologie,usage_courant
+épilepsie,,pathologie,usage_courant
+dépression,,pathologie,usage_courant
+insomnie,,pathologie,usage_courant
+allergie,,pathologie,usage_courant
+eczéma,,pathologie,usage_courant
+psoriasis,,pathologie,usage_courant
+lithiase rénale,,pathologie,usage_courant
+appendicite,,pathologie,usage_courant
+cholécystite,,pathologie,usage_courant
+hernie inguinale,,pathologie,usage_courant
+néoplasie,,pathologie,usage_courant
+DDR,date des dernières règles,pathologie,usage_courant
+SA,semaines d'aménorrhée,pathologie,usage_courant
+TA,tension artérielle,signe_clinique,MSF
+FC,fréquence cardiaque,signe_clinique,MSF
+FR,fréquence respiratoire,signe_clinique,MSF
+SpO2,saturation en oxygène,signe_clinique,MSF
+T°,température,signe_clinique,usage_courant
+IMC,indice de masse corporelle,signe_clinique,MSF
+TRC,temps de remplissage capillaire,signe_clinique,MSF
+EG,état général,signe_clinique,usage_courant
+AEG,altération de l'état général,signe_clinique,usage_courant
+RAS,rien à signaler,signe_clinique,usage_courant
+OMI,œdèmes des membres inférieurs,signe_clinique,usage_courant
+fièvre,,signe_clinique,usage_courant
+toux,,signe_clinique,usage_courant
+dyspnée,,signe_clinique,usage_courant
+céphalées,,signe_clinique,usage_courant
+douleur thoracique,,signe_clinique,usage_courant
+douleur abdominale,,signe_clinique,usage_courant
+nausées,,signe_clinique,usage_courant
+vomissements,,signe_clinique,usage_courant
+diarrhée,,signe_clinique,usage_courant
+constipation,,signe_clinique,usage_courant
+vertiges,,signe_clinique,usage_courant
+asthénie,,signe_clinique,usage_courant
+AINS,anti-inflammatoire non stéroïdien,classe_therapeutique,MSF
+IEC,inhibiteur de l'enzyme de conversion,classe_therapeutique,MSF
+ARV,antirétroviral,classe_therapeutique,MSF
+ATB,antibiotique,classe_therapeutique,usage_courant
+ARA2,antagoniste des récepteurs de l'angiotensine II,classe_therapeutique,usage_courant
+IPP,inhibiteur de la pompe à protons,classe_therapeutique,usage_courant
+AVK,antivitamine K,classe_therapeutique,usage_courant
+AOD,anticoagulant oral direct,classe_therapeutique,usage_courant
+HBPM,héparine de bas poids moléculaire,classe_therapeutique,usage_courant
+SRO,sels de réhydratation orale,classe_therapeutique,MSF
+CGR,concentré de globules rouges,classe_therapeutique,MSF
+co-amoxiclav,amoxicilline + acide clavulanique,classe_therapeutique,MSF
+co-trimoxazole,sulfaméthoxazole + triméthoprime,classe_therapeutique,MSF
+antalgique,,classe_therapeutique,usage_courant
+antipyrétique,,classe_therapeutique,usage_courant
+antispasmodique,,classe_therapeutique,usage_courant
+antihistaminique,,classe_therapeutique,usage_courant
+corticoïdes,,classe_therapeutique,usage_courant
+insuline,,classe_therapeutique,usage_courant
+statine,,classe_therapeutique,usage_courant
+diurétique,,classe_therapeutique,usage_courant
+AG,anesthésie générale,chirurgie,usage_courant
+ALR,anesthésie locorégionale,chirurgie,usage_courant
+rachianesthésie,,chirurgie,usage_courant
+cœlioscopie,,chirurgie,usage_courant
+laparotomie,,chirurgie,usage_courant
+incision,,chirurgie,usage_courant
+suture,,chirurgie,usage_courant
+drainage,,chirurgie,usage_courant
+hémostase,,chirurgie,usage_courant
+exérèse,,chirurgie,usage_courant
+anastomose,,chirurgie,usage_courant
+ostéosynthèse,,chirurgie,usage_courant
+cholécystectomie,,chirurgie,usage_courant
+appendicectomie,,chirurgie,usage_courant
+hystérectomie,,chirurgie,usage_courant
+césarienne,,chirurgie,usage_courant
+score ASA,classification de l'état physique pré-anesthésique,chirurgie,usage_courant
+post-op,postopératoire,chirurgie,usage_courant
+pré-op,préopératoire,chirurgie,usage_courant
+redon,drain de Redon,chirurgie,usage_courant
+pansement,,chirurgie,usage_courant
+ablation des fils,,chirurgie,usage_courant
+CRO,compte rendu opératoire,chirurgie,usage_courant
+Dr,docteur,administratif,usage_courant
+Pr,professeur,administratif,usage_courant
+CNAM,Caisse Nationale d'Assurance Maladie,administratif,usage_courant
+APCI,affection prise en charge intégralement (CNAM),administratif,usage_courant
+CAT,conduite à tenir,administratif,usage_courant
+RDV,rendez-vous,administratif,usage_courant
+contrôle,,administratif,usage_courant
+certificat médical,,administratif,usage_courant
+arrêt de travail,,administratif,usage_courant
+repos,,administratif,usage_courant

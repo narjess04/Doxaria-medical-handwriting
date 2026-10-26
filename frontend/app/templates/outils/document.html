@@ -1,0 +1,130 @@
+{% extends "outils/_layout.html" %}
+{% block title %}{{ doc.type_label }} · MediTrust{% endblock %}
+
+{% block page %}
+<a class="back-link" href="{{ url_for('outils.historique') }}">{{ icon("arrow-right", 16) }} Historique</a>
+
+<header class="page-head">
+  <div>
+    <p class="eyebrow">{{ doc.type_label }}{% if doc.date_document %} du {{ doc.date_document }}{% endif %} · importé le {{ doc.created_at | date_locale }}</p>
+    <h1>{% if doc.numero %}Bulletin n° {{ doc.numero }}{% else %}{{ doc.medecin or "Document numérisé" }}{% endif %}</h1>
+  </div>
+  <div class="head-actions">
+    <button class="btn btn-outline" type="button" data-copy="#texte">{{ icon("copy", 18) }} Copier le texte</button>
+    <form method="post" action="{{ url_for('outils.supprimer', doc_id=doc.id) }}" data-confirm="Supprimer ce document et son image ?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger" type="submit">{{ icon("trash", 18) }} Supprimer</button>
+    </form>
+  </div>
+</header>
+
+{% set zones = doc.zones %}
+{% if doc.demo %}
+<div class="notice notice-demo" role="note">
+  {{ icon("info", 20) }}
+  <div>
+    {% if zones %}
+    <strong>{{ zones|length }} ligne{{ "s" if zones|length > 1 }} détectée{{ "s" if zones|length > 1 }}</strong>
+    sur votre image (encadrées). La <b>lecture</b> du texte attend le modèle TrOCR en cours d'entraînement :
+    le texte ci-dessous est un <b>exemple</b>, que vous pouvez corriger pour tester la vérification des médicaments.
+    {% else %}
+    <strong>Mode démonstration.</strong>
+    Le modèle de lecture n'est pas encore branché : le texte ci-dessous est un <b>exemple</b>, pas la lecture de votre image.
+    Vous pouvez le corriger pour tester la vérification des médicaments.
+    {% endif %}
+  </div>
+</div>
+{% elif doc.modele and "pré-entraîné" in doc.modele %}
+<div class="notice notice-demo" role="note">
+  {{ icon("info", 20) }}
+  <div>
+    <strong>Lecture automatique à vérifier.</strong>
+    Texte lu par le {{ doc.modele }}, pas encore adapté aux ordonnances ; les noms de médicaments
+    ont été corrigés avec le référentiel officiel. Relisez et corrigez avant toute utilisation.
+  </div>
+</div>
+{% endif %}
+
+<div class="doc-grid">
+  <figure class="card doc-image">
+    <a class="doc-image-zones" href="{{ url_for('outils.fichier', nom=doc.image) }}" target="_blank" rel="noopener">
+      <img src="{{ url_for('outils.fichier', nom=doc.image) }}" alt="Image du document">
+      {% for z in zones %}
+      <span class="zone zone-{{ z.classe }}" style="left:{{ '%.2f'|format(z.x * 100) }}%;top:{{ '%.2f'|format(z.y * 100) }}%;width:{{ '%.2f'|format(z.l * 100) }}%;height:{{ '%.2f'|format(z.h * 100) }}%"
+            title="{{ z.libelle }}"></span>
+      {% endfor %}
+    </a>
+    <figcaption class="muted">
+      {% if zones %}
+      {% set roles = zones | map(attribute="classe") | list %}
+      <span class="legende">
+        {% if "medecin" in roles %}<span class="pastille zone-medecin"></span> Médecin{% endif %}
+        {% if "date" in roles %}<span class="pastille zone-date"></span> Date{% endif %}
+        <span class="pastille"></span> {{ "Prescription" if doc.type == "ordonnance" else "Zones détectées" }}
+      </span>
+      {% endif %}
+      Touchez l'image pour l'agrandir.
+    </figcaption>
+  </figure>
+
+  <div class="doc-side">
+    {% if doc.type == "ordonnance" %}
+    <section class="card">
+      <h2 class="card-title">{{ icon("shield-check", 20) }} Vérification des médicaments</h2>
+      {% if verifies is none %}
+      <p class="muted">Vérification indisponible : le backend ne répond pas.</p>
+      {% elif verifies %}
+      <ul class="checks">
+          {% for m in verifies %}
+          <li class="check-item">
+            <span class="check-ok">{{ icon("check", 16) }}</span>
+            <div>
+              <p class="check-name">{{ m.nom }} <span class="muted">· {{ m.dci or "DCI inconnue" }}</span></p>
+              <p class="check-meta">
+                {% if m.classe %}{{ m.classe }} · {% endif %}
+                {% if m.rembourse %}<span class="badge badge-ok">Remboursé CNAM</span>{% else %}<span class="badge">Non remboursé</span>{% endif %}
+                {% if m.prix %}<span class="muted">{{ "%.3f"|format(m.prix)|replace(".", ",") }} DT</span>{% endif %}
+              </p>
+            </div>
+          </li>
+          {% endfor %}
+      </ul>
+      <a class="btn btn-outline btn-block analyse-btn"
+         href="{{ url_for('outils.assistant', q='Analyse cette ordonnance : ' ~ (verifies | map(attribute='nom') | join(', '))) }}">
+        {{ icon("message", 18) }} Analyser avec l'assistant
+      </a>
+      {% else %}
+      <p class="muted">Aucun médicament du référentiel reconnu dans le texte. Vérifiez l'orthographe des noms.</p>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    <form class="card" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h2 class="card-title">{{ icon("edit", 20) }} Texte extrait</h2>
+      <p class="muted small">Relisez et corrigez si besoin, puis enregistrez.</p>
+      <div class="field">
+        <label for="medecin">Médecin</label>
+        <input id="medecin" name="medecin" value="{{ doc.medecin or '' }}" placeholder="Nom du médecin">
+      </div>
+      {% if doc.type == "ordonnance" %}
+      <div class="field">
+        <label for="date_document">Date de l'ordonnance</label>
+        <input id="date_document" name="date_document" value="{{ doc.date_document or '' }}" placeholder="jj/mm/aaaa" inputmode="numeric">
+      </div>
+      {% endif %}
+      {% if doc.type == "bulletin" %}
+      <div class="field">
+        <label for="numero">Numéro du bulletin</label>
+        <input id="numero" name="numero" value="{{ doc.numero or '' }}" inputmode="numeric">
+      </div>
+      {% endif %}
+      <div class="field">
+        <label for="texte">Contenu</label>
+        <textarea id="texte" name="texte" rows="9">{{ doc.texte }}</textarea>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">{{ icon("check", 18) }} Enregistrer</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

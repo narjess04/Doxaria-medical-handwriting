@@ -1,0 +1,70 @@
+{% extends "outils/_layout.html" %}
+{% block title %}Mon espace · MediTrust{% endblock %}
+
+{% block page %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">{{ current_user.role_label }}{% if current_user.organisation %} · {{ current_user.organisation }}{% endif %}</p>
+    <h1>Bonjour {{ current_user.prenom }} 👋</h1>
+    <p class="muted">Que souhaitez-vous faire aujourd'hui ?</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('outils.extraction') }}">{{ icon("camera", 18) }} Numériser un document</a>
+</header>
+
+<section class="kpis" aria-label="Vos chiffres">
+  <div class="kpi"><span class="kpi-icon">{{ icon("pill") }}</span><div><strong>{{ stats.ordonnance }}</strong><span>ordonnance{{ "s" if stats.ordonnance > 1 }}</span></div></div>
+  <div class="kpi"><span class="kpi-icon">{{ icon("clipboard") }}</span><div><strong>{{ stats.bulletin }}</strong><span>bulletin{{ "s" if stats.bulletin > 1 }} de soins</span></div></div>
+  <div class="kpi"><span class="kpi-icon">{{ icon("shield-check") }}</span>{% if nb_medicaments is none %}
+    <div><strong>–</strong><span>vérification indisponible</span></div></div>
+  {% else %}
+    <div><strong>{{ nb_medicaments }}</strong><span>médicament{{ "s" if nb_medicaments > 1 }} vérifié{{ "s" if nb_medicaments > 1 }}</span></div></div>
+  {% endif %}
+</section>
+
+<section aria-labelledby="outils-titre">
+  <h2 id="outils-titre" class="section-title">Outils</h2>
+  <div class="tools">
+    <a class="tool" href="{{ url_for('outils.extraction') }}">
+      <span class="tool-icon">{{ icon("scan") }}</span>
+      <h3>Extraction de données</h3>
+      <p>Lire une ordonnance manuscrite ou un bulletin de soins.</p>
+      <span class="tool-go">Ouvrir {{ icon("arrow-right", 16) }}</span>
+    </a>
+    <a class="tool" href="{{ url_for('outils.fraude') }}">
+      <span class="tool-icon">{{ icon("shield-check") }}</span>
+      <h3>Détection de fraude</h3>
+      <p>Repérer un document suspect : cachet, signature, montants.</p>
+      <span class="tool-go">Ouvrir {{ icon("arrow-right", 16) }}</span>
+    </a>
+    <a class="tool" href="{{ url_for('outils.assistant') }}">
+      <span class="tool-icon">{{ icon("message") }}</span>
+      <h3>Assistant médical</h3>
+      <p>Questions sur un médicament ou une abréviation médicale.</p>
+      <span class="tool-go">Ouvrir {{ icon("arrow-right", 16) }}</span>
+    </a>
+    <div class="tool tool-soon" aria-disabled="true">
+      <span class="tool-icon">{{ icon("users") }}</span>
+      <h3>Classification des patients</h3>
+      <p>Classer les patients selon la gravité de leur état.</p>
+      <span class="badge">Bientôt</span>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="recents-titre">
+  <div class="section-title-row">
+    <h2 id="recents-titre" class="section-title">Documents récents</h2>
+    {% if recents %}<a href="{{ url_for('outils.historique') }}">Tout voir {{ icon("arrow-right", 16) }}</a>{% endif %}
+  </div>
+  {% if recents %}
+    {% include "outils/_liste_documents.html" %}
+  {% else %}
+    <div class="empty">
+      <span class="empty-icon">{{ icon("file-text", 32) }}</span>
+      <h3>Aucun document pour l'instant</h3>
+      <p>Numérisez votre première ordonnance : elle apparaîtra ici.</p>
+      <a class="btn btn-primary" href="{{ url_for('outils.extraction') }}">{{ icon("camera", 18) }} Numériser un document</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

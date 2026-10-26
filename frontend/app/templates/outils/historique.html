@@ -1,0 +1,30 @@
+{% extends "outils/_layout.html" %}
+{% block title %}Historique · MediTrust{% endblock %}
+
+{% block page %}
+<header class="page-head">
+  <div>
+    <h1>Historique</h1>
+    <p class="muted">{{ docs|length }} document{{ "s" if docs|length > 1 }}</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('outils.extraction') }}">{{ icon("camera", 18) }} Nouveau document</a>
+</header>
+
+<nav class="filters" aria-label="Filtrer par type">
+  <a href="{{ url_for('outils.historique') }}" {% if filtre not in types %}aria-current="true"{% endif %}>Tous</a>
+  {% for value, label in types.items() %}
+  <a href="{{ url_for('outils.historique', type=value) }}" {% if filtre == value %}aria-current="true"{% endif %}>{{ label }}s</a>
+  {% endfor %}
+</nav>
+
+{% if docs %}
+  {% include "outils/_liste_documents.html" %}
+{% else %}
+  <div class="empty">
+    <span class="empty-icon">{{ icon("history", 32) }}</span>
+    <h3>Rien ici pour le moment</h3>
+    <p>Les documents que vous numérisez sont enregistrés dans votre historique.</p>
+    <a class="btn btn-primary" href="{{ url_for('outils.extraction') }}">{{ icon("camera", 18) }} Numériser un document</a>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{# Mise en page de l'espace connecté : navigation des outils + barre d'onglets sur téléphone. #}
+{% set onglets = [
+  ("outils.dashboard", "grid", "Accueil"),
+  ("outils.extraction", "scan", "Extraction"),
+  ("outils.historique", "history", "Historique"),
+  ("outils.fraude", "shield-check", "Fraude"),
+  ("outils.assistant", "message", "Assistant"),
+] %}
+{% set actif = "outils.historique" if request.endpoint == "outils.document" else request.endpoint %}
+
+{% block body_class %}espace{% endblock %}
+
+{% block nav_links %}
+  {% for endpoint, ic, label in onglets[1:] %}
+  <li><a href="{{ url_for(endpoint) }}" {% if actif == endpoint %}aria-current="page"{% endif %}>{{ icon(ic, 18) }} {{ label }}</a></li>
+  {% endfor %}
+{% endblock %}
+
+{% block nav_user %}
+  <a class="user-chip" href="{{ url_for('outils.dashboard') }}" title="{{ current_user.prenom }} {{ current_user.nom }}">
+    <span class="avatar">{{ current_user.initiales }}</span>
+    <span class="user-chip-name">{{ current_user.prenom }}</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="container espace-main">
+    {% block page %}{% endblock %}
+  </div>
+  <nav class="tabbar" aria-label="Navigation de l'espace">
+    {% for endpoint, ic, label in onglets %}
+    <a href="{{ url_for(endpoint) }}" {% if actif == endpoint %}aria-current="page"{% endif %}>{{ icon(ic, 22) }}<span>{{ label }}</span></a>
+    {% endfor %}
+  </nav>
+{% endblock %}
+
+{% block footer %}
+  <footer class="espace-footer container">
+    <p>© 2025 MediTrust · ESPRIT × Doxaria · Les résultats doivent être vérifiés par un professionnel de santé.</p>
+  </footer>
+{% endblock %}

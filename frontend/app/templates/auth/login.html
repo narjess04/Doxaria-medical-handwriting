@@ -1,0 +1,17 @@
+{% extends "auth/_layout.html" %}
+{% from "_forms.html" import champ with context %}
+{% block title %}Connexion · MediTrust{% endblock %}
+{% block aside_title %}Bon retour parmi nous.{% endblock %}
+
+{% block form %}
+<h1>Connexion</h1>
+<p class="muted">Accédez à vos documents numérisés.</p>
+<form method="post" novalidate>
+  {{ form.hidden_tag() }}
+  {{ champ(form.email, "vous@exemple.com", "email") }}
+  {{ champ(form.password, "Votre mot de passe", "current-password", password=true) }}
+  <label class="check">{{ form.remember() }} {{ form.remember.label.text }}</label>
+  <button class="btn btn-primary btn-block" type="submit">Se connecter</button>
+</form>
+<p class="auth-switch">Pas encore de compte ? <a href="{{ url_for('auth.register') }}">Créer un compte</a></p>
+{% endblock %}

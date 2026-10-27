@@ -35,6 +35,8 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False, default="patient")
     organisation = db.Column(db.String(120))
     password_hash = db.Column(db.String(255), nullable=False)
+    # Compte démo partagé : rien n'est enregistré (ni document ni image), voir outils.extraction.
+    demo = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=maintenant)
     documents = db.relationship("Document", backref="user", cascade="all, delete-orphan",
                                 order_by="Document.created_at.desc()")

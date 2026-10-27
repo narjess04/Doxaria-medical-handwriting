@@ -18,11 +18,12 @@
     <div class="dropzone-empty">
       <span class="dropzone-icon">{{ icon("shield-check", 32) }}</span>
       <p class="dropzone-title">Glissez le document à contrôler</p>
-      <p class="muted">JPG, PNG ou WebP · 10 Mo maximum</p>
+      <p class="muted">Photo ou image · réduite automatiquement si elle est trop lourde</p>
       <div class="sources">
         <label class="btn btn-primary source-camera" for="camera">{{ icon("camera", 18) }} Prendre une photo</label>
         <label class="btn btn-outline source-galerie" for="galerie">{{ icon("image", 18) }} Galerie</label>
         <label class="btn btn-outline source-pc" for="image">{{ icon("upload", 18) }} Depuis l'ordinateur</label>
+        <button type="button" class="btn btn-outline source-webcam" data-webcam hidden>{{ icon("camera", 18) }} Webcam</button>
       </div>
     </div>
     <div class="dropzone-preview" hidden>

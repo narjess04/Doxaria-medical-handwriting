@@ -57,9 +57,20 @@
     const types = ["image/jpeg", "image/png", "image/webp"];
     let courant = null;
 
-    const choisir = (input) => {
-      const file = input.files?.[0];
+    const choisir = async (input) => {
+      let file = input.files?.[0];
       if (!file) return;
+      try {
+        file = await preparer(file);
+      } catch {
+        alert("Image illisible : choisissez une photo JPG, PNG ou WebP.");
+        input.value = "";
+        return;
+      }
+      // Le fichier préparé remplace l'original, aussi pour l'envoi classique du formulaire.
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
       inputs.forEach((i) => { if (i !== input) { i.removeAttribute("name"); i.value = ""; } });
       input.name = "image";
       courant = file;
@@ -88,12 +99,27 @@
     zone.addEventListener("drop", (e) => {
       const file = e.dataTransfer.files?.[0];
       if (!file) return;
-      if (!types.includes(file.type)) { alert("Format non pris en charge : choisissez une image JPG, PNG ou WebP."); return; }
+      if (!file.type.startsWith("image/")) { alert("Format non pris en charge : choisissez une image."); return; }
       const dt = new DataTransfer();
       dt.items.add(file);
       inputs[0].files = dt.files;
       choisir(inputs[0]);
     });
+
+    // Webcam (ordinateur) : aperçu en direct, puis une photo envoyée comme un fichier.
+    // getUserMedia n'existe qu'en HTTPS ou sur localhost : sinon le bouton reste caché.
+    const webcam = form.querySelector("[data-webcam]");
+    if (webcam && navigator.mediaDevices?.getUserMedia) {
+      webcam.hidden = false;
+      webcam.addEventListener("click", async () => {
+        const photo = await prendrePhoto();
+        if (!photo) return;
+        const dt = new DataTransfer();
+        dt.items.add(photo);
+        inputs[0].files = dt.files;
+        choisir(inputs[0]);
+      });
+    }
 
     form.addEventListener("submit", async (e) => {
       if (!courant) { e.preventDefault(); return; }
@@ -117,6 +143,76 @@
       }
     });
   });
+
+  // Photo prête à envoyer : remise à l'endroit (EXIF), 3000 px au plus, en JPEG.
+  // Une photo de téléphone (souvent plus de 10 Mo, ou en HEIC sur iPhone) devient
+  // un JPEG de 1 à 2 Mo, bien assez net pour la lecture.
+  const COTE_MAX = 3000;
+  async function preparer(file) {
+    const types = ["image/jpeg", "image/png", "image/webp"];
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const echelle = Math.min(1, COTE_MAX / Math.max(bitmap.width, bitmap.height));
+    if (echelle === 1 && types.includes(file.type) && file.size <= 4 * 1048576) { bitmap.close(); return file; }
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * echelle);
+    canvas.height = Math.round(bitmap.height * echelle);
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise((ok) => canvas.toBlob(ok, "image/jpeg", 0.88));
+    if (!blob) throw new Error("conversion impossible");
+    const nom = (file.name || "photo").replace(/\.[^.]*$/, "") + ".jpg";
+    return new File([blob], nom, { type: "image/jpeg" });
+  }
+
+  // Fenêtre de prise de vue : renvoie la photo (File) ou null si l'utilisateur annule.
+  function prendrePhoto() {
+    return new Promise((resolve) => {
+      const dialog = document.createElement("dialog");
+      dialog.className = "webcam";
+      dialog.innerHTML = `
+        <video autoplay playsinline muted></video>
+        <p class="webcam-msg muted">Cadrez tout le document, bien à plat.</p>
+        <div class="webcam-actions">
+          <button type="button" class="btn btn-ghost" data-annuler>Annuler</button>
+          <button type="button" class="btn btn-primary" data-capturer disabled>Prendre la photo</button>
+        </div>`;
+      document.body.append(dialog);
+      const video = dialog.querySelector("video");
+      const capturer = dialog.querySelector("[data-capturer]");
+      let flux = null;
+
+      const fermer = (photo) => {
+        flux?.getTracks().forEach((t) => t.stop());
+        dialog.close();
+        dialog.remove();
+        resolve(photo);
+      };
+      dialog.addEventListener("cancel", (e) => { e.preventDefault(); fermer(null); });
+      dialog.querySelector("[data-annuler]").addEventListener("click", () => fermer(null));
+      capturer.addEventListener("click", () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+        canvas.toBlob((blob) => fermer(blob && new File([blob], "webcam.jpg", { type: "image/jpeg" })), "image/jpeg", 0.92);
+      });
+
+      dialog.showModal();
+      // Caméra arrière si elle existe, en haute définition pour que l'écriture reste lisible.
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false,
+      }).then((s) => {
+        // Fenêtre déjà fermée pendant la demande d'autorisation : on éteint la caméra.
+        if (!dialog.isConnected) { s.getTracks().forEach((t) => t.stop()); return; }
+        flux = s;
+        video.srcObject = s;
+        capturer.disabled = false;
+      }).catch(() => {
+        dialog.querySelector(".webcam-msg").textContent =
+          "Impossible d'accéder à la caméra : autorisez-la dans le navigateur, ou importez une image.";
+      });
+    });
+  }
 
   function afficherVerdict(box, res) {
     box.hidden = false;

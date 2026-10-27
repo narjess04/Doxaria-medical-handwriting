@@ -1,5 +1,6 @@
 """Espace connecté : tableau de bord, extraction, historique, fraude, assistant."""
 
+import base64
 import json
 import uuid
 from pathlib import Path
@@ -9,7 +10,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, rend
 from flask_login import current_user, login_required
 
 from . import db, services
-from .models import TYPES_DOCUMENT, Document
+from .models import TYPES_DOCUMENT, Document, maintenant
 
 bp = Blueprint("outils", __name__)
 
@@ -71,7 +72,21 @@ def extraction():
         type_document = request.form.get("type", "auto")
         if type_document not in ("auto", *TYPES_DOCUMENT):
             type_document = "auto"
-        res = services.analyser_document(dossier_uploads() / nom, type_document)
+        chemin = dossier_uploads() / nom
+        if current_user.demo:
+            # Compte démo : résultat affiché une seule fois, rien n'est enregistré ;
+            # l'image est supprimée tout de suite et montrée depuis la mémoire.
+            try:
+                res = services.analyser_document(chemin, type_document)
+                image = f"data:image/{chemin.suffix[1:].replace('jpg', 'jpeg')};base64,{base64.b64encode(chemin.read_bytes()).decode()}"
+            finally:
+                chemin.unlink(missing_ok=True)
+            doc = Document(type=res["type"], image=nom, medecin=res["medecin"], texte=res["texte"],
+                           numero=res["numero"], demo=res["demo"], boites=json.dumps(res.get("zones", [])),
+                           date_document=res.get("date"), modele=res.get("modele"), created_at=maintenant())
+            verifies = services.verifier_medicaments(doc.texte) if doc.type == "ordonnance" else []
+            return render_template("outils/document.html", doc=doc, verifies=verifies, image_demo=image)
+        res = services.analyser_document(chemin, type_document)
         doc = Document(user_id=current_user.id, type=res["type"], image=nom, medecin=res["medecin"],
                        texte=res["texte"], numero=res["numero"], demo=res["demo"], boites=json.dumps(res.get("zones", [])),
                        date_document=res.get("date"), modele=res.get("modele"))

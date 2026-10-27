@@ -15,7 +15,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.chatbot import rag
 from app.chatbot.referentiels import medicaments_dans, statistiques
-from app.pipeline import classification, fraude, modeles, ocr, pipeline
+from app.pipeline import classification, fraude, lecture_api, modeles, ocr, pipeline
 from app.pipeline.modeles import ModeleIndisponible
 from app.pipeline.preprocessing import ImageInvalide, charger_image
 
@@ -34,7 +34,8 @@ def image_envoyee(fichier: UploadFile):
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "llm": rag.llm_configure(), "ocr": ocr.disponible(), "modeles": modeles.disponibles()}
+    return {"status": "ok", "llm": rag.llm_configure(), "ocr": ocr.disponible(),
+            "lecture_api": lecture_api.disponible(), "modeles": modeles.disponibles()}
 
 
 @router.post("/chat", response_model=ChatReponse, response_model_exclude_none=True)

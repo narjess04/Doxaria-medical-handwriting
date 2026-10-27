@@ -36,7 +36,7 @@ traitement.
    ├─ /api/extract             YOLOv8 (lignes, médecin, date) → TrOCR → correction par le référentiel
    ├─ /api/fraud               YOLOv8 cachet + en-tête → comparaison des noms
    ├─ /api/medicaments/verifier
-   └─ /api/chat                RAG : référentiels data/ + modèle de langage (Groq / OpenRouter)
+   └─ /api/chat                RAG : référentiels data/ + modèle de langage (Groq)
         │
         ▼
  data/  référentiels officiels (CSV) · backend/models/  poids des modèles
@@ -46,20 +46,26 @@ traitement.
 
 | Modèle | Rôle | Fichier (`backend/models/`) | Résultat à l'entraînement |
 |---|---|---|---|
-| CNN (3 convolutions) | ordonnance ou bulletin | `classification/cnn_ordonnance_bulletin.pt` | à compléter (notebook) |
+| CNN (3 convolutions) | ordonnance ou bulletin | `classification/cnn_ordonnance_bulletin.pt` 
 | YOLOv8n | lignes de texte | `yolo/lignes_texte.pt` | mAP50 0,929 |
 | YOLOv8n | date de l'ordonnance | `ordonnance/date_texte.pt` | mAP50 0,804 |
 | YOLOv8n | cachet + en-tête du médecin | `fraude/docteur_cachet.pt` | mAP50 0,886 |
 | YOLOv8n | 9 champs du bulletin | `bulletin/champs_bulletin.pt` | mAP50 0,995 |
-| TrOCR | lecture de l'écriture manuscrite | `trocr-doxaria/` | notebook 02 |
+| TrOCR fine-tuné | lecture de l'écriture manuscrite 
 
-**TrOCR.** Tant que le modèle fine-tuné (notebook 02) n'est pas dans
-`backend/models/trocr-doxaria/`, le backend utilise **TrOCR pré-entraîné**
-(`microsoft/trocr-base-handwritten`, environ 1,3 Go, téléchargé une seule fois).
-Il ne connaît ni le français médical ni les noms de médicaments : la correction
-par le référentiel rattrape une partie des erreurs, et le site invite à relire
-le texte. Le fine-tuning et la comparaison avec EasyOCR et Tesseract sont dans
-les [notebooks Colab](notebooks/README.md).
+**TrOCR fine-tuné sur des ordonnances tunisiennes.** Le modèle de lecture est
+TrOCR (`microsoft/trocr-base-handwritten`), fine-tuné sur notre propre jeu de
+données : **plus de 210 ordonnances médicales tunisiennes** manuscrites,
+découpées **ligne par ligne** puis **annotées à la main** (transcription exacte
+de chaque ligne : médicaments, dosages, posologies, en-têtes et dates). Le
+modèle apprend ainsi l'écriture des médecins, le français médical et les noms
+de médicaments vendus en Tunisie. Chaque ligne lue est ensuite corrigée avec
+le référentiel officiel des médicaments et des termes médicaux. Le
+fine-tuning et la comparaison avec EasyOCR et Tesseract sont dans les
+[notebooks Colab](notebooks/README.md).
+
+Tant que les poids fine-tunés ne sont pas dans `backend/models/trocr-doxaria/`,
+le backend utilise TrOCR pré-entraîné (environ 1,3 Go, téléchargé une seule fois).
 
 ## Données
 
@@ -119,11 +125,12 @@ qui sont présents.
 
 ### Configuration
 
-`backend/.env` (jamais versionné) :
+`backend/.env` (jamais versionné), à créer à partir de
+[`backend/.env.example`](backend/.env.example) :
 
 ```ini
-LLM_API_KEY=...                                # clé Groq (ou OpenRouter)
-LLM_BASE_URL=https://api.groq.com/openai/v1    # OpenRouter : https://openrouter.ai/api/v1
+LLM_API_KEY=...                                # clé Groq
+LLM_BASE_URL=https://api.groq.com/openai/v1
 LLM_MODEL=openai/gpt-oss-120b
 ```
 
@@ -132,9 +139,23 @@ Sans clé, l'assistant répond à partir des seuls référentiels. Facultatif :
 française et `pip install pytesseract`, pour lire le texte du cachet (fraude) et
 le numéro de bulletin.
 
-Pour ouvrir le site depuis un téléphone du même réseau :
-`HOST=0.0.0.0 python run.py`, puis `http://<ip-du-pc>:5000`. Pour la caméra, le
-site doit être servi en HTTPS une fois déployé.
+Pour ouvrir le site depuis un téléphone du même réseau (Wi-Fi) :
+
+```powershell
+$env:HOST = "0.0.0.0"; python run.py     # macOS/Linux : HOST=0.0.0.0 python run.py
+ipconfig                                  # adresse IPv4 du PC, ex. 192.168.1.20
+```
+
+puis, sur le téléphone, `http://<ip-du-pc>:5000`. Windows demande la première
+fois d'autoriser Python dans le pare-feu (réseau privé). Seul le frontend est
+exposé : il appelle le backend sur le PC.
+
+Le bouton « Prendre une photo » ouvre l'appareil photo du téléphone, même en
+HTTP. La photo est remise à l'endroit, réduite (3000 px au plus) et convertie
+en JPEG dans le navigateur avant l'envoi : les photos lourdes ou en HEIC
+(iPhone) passent. Sur ordinateur, le bouton « Webcam » affiche un aperçu en
+direct ; il n'apparaît qu'en HTTPS ou sur `localhost`, comme l'exige le
+navigateur pour accéder à la caméra.
 
 ## Tests
 
@@ -147,7 +168,8 @@ cd frontend && python -m pytest tests    # comptes, documents, droits d'accès, 
 
 - Les résultats de lecture doivent être **relus par un professionnel de santé** ;
   l'assistant ne pose pas de diagnostic.
-- Tant que TrOCR n'est pas fine-tuné, la lecture des ordonnances reste approximative.
+- TrOCR est entraîné sur un peu plus de 210 ordonnances : une écriture très
+  différente de celles du jeu de données peut être moins bien lue.
 - Le référentiel DPM est un instantané de janvier 2024 (voir `data/medicaments/README.md`).
 - La base SQLite convient à une démonstration ; pour un usage réel, PostgreSQL
   (variable `DATABASE_URL`) et un hébergement adapté aux données de santé.

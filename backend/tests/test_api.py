@@ -9,12 +9,19 @@ from PIL import Image
 
 from app.chatbot import rag
 from app.core import config
-from app.pipeline import classification, correction, detection, ocr, recognition
+from app.pipeline import classification, correction, detection, lecture_api, ocr, recognition
 from app.pipeline.modeles import ModeleIndisponible
 from app.pipeline.preprocessing import charger_image
 from main import app
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def sans_api_de_lecture(monkeypatch):
+    """Pas d'appel aux API de lecture pendant les tests : la lecture passe par TrOCR (simulé)."""
+    monkeypatch.setattr(config, "OCR_API_KEY", "")
+    monkeypatch.setattr(config, "MISTRAL_API_KEY", "")
 
 
 @pytest.fixture
@@ -210,6 +217,56 @@ def test_extract_ordonnance_complete(detections, monkeypatch):
     assert r["medicaments"] == ["AUGMENTIN"]
     assert [c["classe"] for c in r["champs"]] == ["medecin", "date", "prescription", "prescription"]
     assert r["champs"][2]["libelle"] == "Augmantin 1g"  # lecture brute conservée
+
+
+def api_simulee(monkeypatch, corps):
+    """Remplace l'appel HTTP de lecture_api ; renvoie la liste des requêtes envoyées."""
+    class Reponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return corps
+
+    appels = []
+    monkeypatch.setattr(lecture_api.requests, "post", lambda url, **k: appels.append({"url": url, **k}) or Reponse())
+    return appels
+
+
+def test_extract_ordonnance_vision(monkeypatch):
+    monkeypatch.setattr(config, "OCR_API_KEY", "cle-de-test")
+    reponse = ('```json\n{"medecin": "Dr Sami Trabelsi, Médecine générale", "date": "Tunis, le 12-3-26", '
+               '"patient": "Mr Karim Ben Ali", "prescription": ["Augmantin 1g", "1 sachet x 3/j"], "texte": "…"}\n```')
+    appels = api_simulee(monkeypatch, {"choices": [{"message": {"content": reponse}}]})
+    r = client.post("/api/extract", files={"image": png(400, 600)}, data={"type": "ordonnance"}).json()
+    assert len(appels) == 1 and appels[0]["json"]["model"] == config.OCR_MODEL  # un seul appel par ordonnance
+    assert r["medecin"] == "Dr Sami Trabelsi, Médecine générale" and r["date"] == "12/03/2026"
+    assert r["patient"] == "Mr Karim Ben Ali" and r["champs"] == []
+    assert r["texte"] == "Augmentin 1g\n1 sachet x 3/j" and r["medicaments"] == ["AUGMENTIN"]
+
+
+def test_extract_ordonnance_mistral(monkeypatch):
+    monkeypatch.setattr(config, "MISTRAL_API_KEY", "cle-de-test")
+    markdown = "# Dr Sami Trabelsi\nTunis, le 12-3-26\n\n- **Augmantin** 1g\n- 1 sachet x 3/j"
+    appels = api_simulee(monkeypatch, {"pages": [{"markdown": markdown}]})
+    r = client.post("/api/extract", files={"image": png(400, 600)}, data={"type": "ordonnance"}).json()
+    assert len(appels) == 1 and appels[0]["json"]["model"] == config.MISTRAL_OCR_MODEL  # une seule page facturée
+    assert r["medecin"] == "Dr Sami Trabelsi" and r["date"] == "12/03/2026"
+    assert r["texte"] == "Augmentin 1g\n1 sachet x 3/j" and r["medicaments"] == ["AUGMENTIN"]
+    assert r["modele"].startswith("Mistral OCR")
+
+
+def test_extract_api_injoignable_repli_trocr(detections, monkeypatch):
+    monkeypatch.setattr(config, "OCR_API_KEY", "cle-de-test")
+
+    def panne(url, **k):
+        raise lecture_api.requests.ConnectionError("hors ligne")
+
+    monkeypatch.setattr(lecture_api.requests, "post", panne)
+    detections.retour[config.MODELE_LIGNES] = [boite("text")]
+    monkeypatch.setattr(recognition, "lire_lignes", lambda images: ["Doliprane 1000"])
+    r = client.post("/api/extract", files={"image": png()}, data={"type": "ordonnance"}).json()
+    assert r["texte"] == "Doliprane 1000" and r["modele"].startswith("TrOCR")
 
 
 @pytest.mark.parametrize("lu, attendu", [

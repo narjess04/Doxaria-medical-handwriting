@@ -5,6 +5,7 @@ Lancer : cd frontend && python -m pytest tests
 
 import io
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 
@@ -201,3 +202,32 @@ def test_assistant_relaie_le_backend(client, monkeypatch):
     r = client.post("/assistant/question", json={"question": "Et chez l'enfant ?", "historique": historique})
     assert r.json == {"markdown": "**ok**"}
     assert recu["historique"] == [{"role": "user", "content": "Doliprane"}]  # rôle « system » filtré
+
+
+# ---------- Compte démo ----------
+
+def test_compte_demo_ne_conserve_rien(app, backend):
+    from app.models import Document, User
+
+    c = app.test_client()
+    assert "Essayer la démo" in c.get("/").text and "Essayer la démo" in c.get("/auth/connexion").text
+    r = c.post("/auth/demo", follow_redirects=True)
+    assert r.status_code == 200 and "Compte démo" in r.text
+
+    r = envoyer(c)
+    assert "rien n'est conservé" in r.text and "AUGMENTIN" in r.text
+    assert "data:image/jpeg;base64," in r.text  # image montrée depuis la mémoire
+    assert ">Enregistrer<" not in r.text.replace(" ", "") and "Supprimer" not in r.text
+    with app.app_context():
+        assert Document.query.count() == 0
+        assert User.query.filter_by(demo=True).one().documents == []
+    assert not list((Path(app.instance_path) / "uploads").iterdir())  # image déjà supprimée
+    assert "Aucun" in c.get("/historique").text or "aucun" in c.get("/historique").text.lower()
+
+
+def test_compte_demo_sans_mot_de_passe(app):
+    c = app.test_client()
+    c.post("/auth/demo")
+    c2 = app.test_client()
+    r = c2.post("/auth/connexion", data={"email": "demo@meditrust.tn", "password": ""})
+    assert "/espace" not in (r.location or "")

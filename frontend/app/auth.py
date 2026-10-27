@@ -1,5 +1,6 @@
 """Inscription, connexion et déconnexion."""
 
+import secrets
 from urllib.parse import urlsplit
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
@@ -41,6 +42,28 @@ def register():
         flash(f"Bienvenue {user.prenom}, votre compte est créé.", "success")
         return redirect(url_for("outils.dashboard"))
     return render_template("auth/register.html", form=form)
+
+
+DEMO_EMAIL = "demo@meditrust.tn"
+
+
+@bp.route("/demo", methods=["POST"])
+def demo():
+    """Connexion au compte démo partagé, sans mot de passe. Ce compte ne conserve rien :
+    les documents analysés sont affichés une fois, puis oubliés avec leur image."""
+    user = User.query.filter_by(email=DEMO_EMAIL).first()
+    if user is None:
+        user = User(prenom="Démo", nom="MediTrust", email=DEMO_EMAIL, role="patient", demo=True)
+        user.set_password(secrets.token_urlsafe(32))  # mot de passe inconnu : connexion par ce bouton seulement
+        db.session.add(user)
+    # Par sécurité : aucun document ne doit rester attaché au compte démo.
+    for doc in list(user.documents):
+        db.session.delete(doc)
+    db.session.commit()
+    logout_user()
+    login_user(user, remember=False)
+    flash("Compte démo : testez librement, aucune ordonnance ni image n'est conservée.", "info")
+    return redirect(url_for("outils.extraction"))
 
 
 @bp.route("/connexion", methods=["GET", "POST"])

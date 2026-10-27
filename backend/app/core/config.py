@@ -28,6 +28,17 @@ MODELE_TROCR = MODELS_DIR / "trocr-doxaria"                           # TrOCR fi
 TROCR_SECOURS = os.environ.get("TROCR_SECOURS", "microsoft/trocr-base-handwritten")
 TROCR_FAISCEAUX = 1  # lecture simple : sur processeur, 3 faisceaux coûtent +20 % de temps pour un gain faible
 
+# Lecture des ordonnances par une API, dans cet ordre (sinon TrOCR, ci-dessus) :
+# 1. modèle de vision compatible OpenAI (OpenRouter) : lit la page ET range médecin,
+#    date, patient et prescription ; ~0,0003 $ par ordonnance avec Qwen3-VL 30B ;
+# 2. Mistral OCR : texte seul, rangé ensuite par mots-clés ; version figée la moins chère.
+OCR_API_KEY = os.environ.get("OCR_API_KEY", "")
+OCR_BASE_URL = os.environ.get("OCR_BASE_URL", "https://openrouter.ai/api/v1")
+OCR_MODEL = os.environ.get("OCR_MODEL", "qwen/qwen3-vl-30b-a3b-instruct")
+MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY", "")
+MISTRAL_OCR_MODEL = os.environ.get("MISTRAL_OCR_MODEL", "mistral-ocr-2512")
+OCR_TIMEOUT = 90
+
 SEUIL_DETECTION = 0.3       # confiance minimale des boîtes YOLO
 SEUIL_SIMILARITE_CACHET = 0.2  # part des mots du cachet retrouvés dans la zone « docteur »
 TAILLE_MAX_IMAGE = 10 * 1024 * 1024

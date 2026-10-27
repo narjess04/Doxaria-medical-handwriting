@@ -35,11 +35,12 @@
     <div class="dropzone-empty">
       <span class="dropzone-icon">{{ icon("upload", 32) }}</span>
       <p class="dropzone-title">Glissez une image ici</p>
-      <p class="muted">JPG, PNG ou WebP · 10 Mo maximum</p>
+      <p class="muted">Photo ou image · réduite automatiquement si elle est trop lourde</p>
       <div class="sources">
         <label class="btn btn-primary source-camera" for="camera">{{ icon("camera", 18) }} Prendre une photo</label>
         <label class="btn btn-outline source-galerie" for="galerie">{{ icon("image", 18) }} Galerie</label>
         <label class="btn btn-outline source-pc" for="image">{{ icon("upload", 18) }} Depuis l'ordinateur</label>
+        <button type="button" class="btn btn-outline source-webcam" data-webcam hidden>{{ icon("camera", 18) }} Webcam</button>
       </div>
     </div>
     <div class="dropzone-preview" hidden>
@@ -53,7 +54,7 @@
 
   <div class="tips">
     <p>{{ icon("info", 16) }} Pour un meilleur résultat : document à plat, bien éclairé, sans reflet, et cadré entièrement.</p>
-    <p>{{ icon("history", 16) }} La lecture d'une ordonnance prend environ une minute : chaque ligne est lue séparément.</p>
+    <p>{{ icon("history", 16) }} La lecture d'une ordonnance prend de quelques secondes à une minute.</p>
   </div>
 
   <button class="btn btn-primary btn-lg btn-block" type="submit" data-submit disabled>

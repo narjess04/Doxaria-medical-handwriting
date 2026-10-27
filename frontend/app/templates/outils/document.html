@@ -2,7 +2,12 @@
 {% block title %}{{ doc.type_label }} · MediTrust{% endblock %}
 
 {% block page %}
+{% set demo_compte = current_user.demo %}
+{% if demo_compte %}
+<a class="back-link" href="{{ url_for('outils.extraction') }}">{{ icon("arrow-right", 16) }} Analyser un autre document</a>
+{% else %}
 <a class="back-link" href="{{ url_for('outils.historique') }}">{{ icon("arrow-right", 16) }} Historique</a>
+{% endif %}
 
 <header class="page-head">
   <div>
@@ -11,14 +16,27 @@
   </div>
   <div class="head-actions">
     <button class="btn btn-outline" type="button" data-copy="#texte">{{ icon("copy", 18) }} Copier le texte</button>
+    {% if not demo_compte %}
     <form method="post" action="{{ url_for('outils.supprimer', doc_id=doc.id) }}" data-confirm="Supprimer ce document et son image ?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button class="btn btn-danger" type="submit">{{ icon("trash", 18) }} Supprimer</button>
     </form>
+    {% endif %}
   </div>
 </header>
 
 {% set zones = doc.zones %}
+{% set src_image = image_demo if demo_compte else url_for('outils.fichier', nom=doc.image) %}
+{% if demo_compte %}
+<div class="notice notice-demo" role="note">
+  {{ icon("info", 20) }}
+  <div>
+    <strong>Compte démo : rien n'est conservé.</strong>
+    Ce résultat n'est pas enregistré et votre image a déjà été supprimée du serveur.
+    <a href="{{ url_for('auth.register') }}">Créez un compte</a> pour garder vos documents.
+  </div>
+</div>
+{% endif %}
 {% if doc.demo %}
 <div class="notice notice-demo" role="note">
   {{ icon("info", 20) }}
@@ -47,8 +65,8 @@
 
 <div class="doc-grid">
   <figure class="card doc-image">
-    <a class="doc-image-zones" href="{{ url_for('outils.fichier', nom=doc.image) }}" target="_blank" rel="noopener">
-      <img src="{{ url_for('outils.fichier', nom=doc.image) }}" alt="Image du document">
+    <a class="doc-image-zones" {% if not demo_compte %}href="{{ src_image }}" target="_blank" rel="noopener"{% endif %}>
+      <img src="{{ src_image }}" alt="Image du document">
       {% for z in zones %}
       <span class="zone zone-{{ z.classe }}" style="left:{{ '%.2f'|format(z.x * 100) }}%;top:{{ '%.2f'|format(z.y * 100) }}%;width:{{ '%.2f'|format(z.l * 100) }}%;height:{{ '%.2f'|format(z.h * 100) }}%"
             title="{{ z.libelle }}"></span>
@@ -63,7 +81,7 @@
         <span class="pastille"></span> {{ "Prescription" if doc.type == "ordonnance" else "Zones détectées" }}
       </span>
       {% endif %}
-      Touchez l'image pour l'agrandir.
+      {% if not demo_compte %}Touchez l'image pour l'agrandir.{% endif %}
     </figcaption>
   </figure>
 
@@ -99,10 +117,10 @@
     </section>
     {% endif %}
 
-    <form class="card" method="post">
+    <form class="card" method="post" {% if demo_compte %}onsubmit="return false"{% endif %}>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <h2 class="card-title">{{ icon("edit", 20) }} Texte extrait</h2>
-      <p class="muted small">Relisez et corrigez si besoin, puis enregistrez.</p>
+      <p class="muted small">{% if demo_compte %}Compte démo : vous pouvez copier le texte, mais il n'est pas enregistré.{% else %}Relisez et corrigez si besoin, puis enregistrez.{% endif %}</p>
       <div class="field">
         <label for="medecin">Médecin</label>
         <input id="medecin" name="medecin" value="{{ doc.medecin or '' }}" placeholder="Nom du médecin">
@@ -123,7 +141,9 @@
         <label for="texte">Contenu</label>
         <textarea id="texte" name="texte" rows="9">{{ doc.texte }}</textarea>
       </div>
+      {% if not demo_compte %}
       <button class="btn btn-primary btn-block" type="submit">{{ icon("check", 18) }} Enregistrer</button>
+      {% endif %}
     </form>
   </div>
 </div>

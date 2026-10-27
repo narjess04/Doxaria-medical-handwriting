@@ -13,5 +13,10 @@
   <label class="check">{{ form.remember() }} {{ form.remember.label.text }}</label>
   <button class="btn btn-primary btn-block" type="submit">Se connecter</button>
 </form>
+<form method="post" action="{{ url_for('auth.demo') }}" class="demo-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn btn-outline btn-block" type="submit">{{ icon("sparkles", 18) }} Essayer la démo sans compte</button>
+</form>
+<p class="muted small demo-note">Compte démo partagé : vos images sont analysées puis supprimées, rien n'est enregistré.</p>
 <p class="auth-switch">Pas encore de compte ? <a href="{{ url_for('auth.register') }}">Créer un compte</a></p>
 {% endblock %}

@@ -68,6 +68,7 @@ class Extraction(BaseModel):
     lecture: bool = True  # False : lignes détectées mais pas lues (TrOCR indisponible)
     medecin: str | None = None
     date: str | None = None  # jj/mm/aaaa
+    patient: str | None = None  # lu seulement par le modèle de vision
     texte: str
     numero: str | None = None
     # Ordonnance : une boîte par ligne ; classe = medecin | date | prescription,

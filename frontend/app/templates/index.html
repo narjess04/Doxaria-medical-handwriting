@@ -17,6 +17,10 @@
         {% else %}
           <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">Commencer gratuitement {{ icon("arrow-right", 18) }}</a>
           <a class="btn btn-ghost btn-lg" href="{{ url_for('auth.login') }}">J'ai déjà un compte</a>
+          <form method="post" action="{{ url_for('auth.demo') }}" class="demo-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost btn-lg" type="submit">{{ icon("sparkles", 18) }} Essayer la démo sans compte</button>
+          </form>
         {% endif %}
       </div>
       <ul class="hero-points">

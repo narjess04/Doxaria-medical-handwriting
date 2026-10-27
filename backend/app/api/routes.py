@@ -9,12 +9,14 @@ POST /api/extract                 lecture d'une ordonnance ou d'un bulletin de s
 POST /api/fraud                   détection de fraude (cachet / en-tête du médecin)
 """
 
+import secrets
 from typing import Literal
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile
 
 from app.chatbot import rag
 from app.chatbot.referentiels import medicaments_dans, statistiques
+from app.core import config
 from app.pipeline import classification, fraude, lecture_api, modeles, ocr, pipeline
 from app.pipeline.modeles import ModeleIndisponible
 from app.pipeline.preprocessing import ImageInvalide, charger_image
@@ -22,7 +24,14 @@ from app.pipeline.preprocessing import ImageInvalide, charger_image
 from .schemas import (ChatReponse, ChatRequete, Classification, Extraction, Fraude, Statistiques, TexteRequete,
                       Verification)
 
-router = APIRouter(prefix="/api")
+def verifier_jeton(authorization: str = Header("")):
+    """Avec config.API_TOKEN défini (serveur en ligne), seul le frontend peut appeler l'API."""
+    if config.API_TOKEN and not secrets.compare_digest(authorization, f"Bearer {config.API_TOKEN}"):
+        raise HTTPException(401, "Jeton d'accès manquant ou invalide.")
+
+
+public = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", dependencies=[Depends(verifier_jeton)])
 
 
 def image_envoyee(fichier: UploadFile):
@@ -32,7 +41,7 @@ def image_envoyee(fichier: UploadFile):
         raise HTTPException(422, str(e)) from e
 
 
-@router.get("/health")
+@public.get("/health")
 def health():
     return {"status": "ok", "llm": rag.llm_configure(), "ocr": ocr.disponible(),
             "lecture_api": lecture_api.disponible(), "modeles": modeles.disponibles()}

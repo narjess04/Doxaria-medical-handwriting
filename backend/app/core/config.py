@@ -50,4 +50,12 @@ LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://api.groq.com/openai/v1")
 LLM_MODEL = os.environ.get("LLM_MODEL", "openai/gpt-oss-120b")
 LLM_TIMEOUT = 45
 
-CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://127.0.0.1:5000,http://localhost:5000").split(",")
+# Déploiement (voir README) :
+# - API_TOKEN : jeton partagé avec le frontend ; s'il est défini, toutes les routes sauf
+#   /api/health l'exigent (en-tête « Authorization: Bearer … »). Vide en local.
+# - HF_MODELES : dépôt Hugging Face des poids (ex. « narjess04/meditrust-modeles »),
+#   téléchargés dans models/ au démarrage par `python -m app.core.telechargement`.
+API_TOKEN = os.environ.get("API_TOKEN", "")
+HF_MODELES = os.environ.get("HF_MODELES", "")
+
+CORS_ORIGINS =os.environ.get("CORS_ORIGINS", "http://127.0.0.1:5000,http://localhost:5000").split(",")

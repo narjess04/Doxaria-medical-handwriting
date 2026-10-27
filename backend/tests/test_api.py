@@ -314,3 +314,19 @@ def test_vrais_modeles():
     r = client.post("/api/classify", files={"image": png(400, 560)}).json()
     assert r["type"] in ("ordonnance", "bulletin") and 0.5 <= r["confiance"] <= 1
     assert client.post("/api/fraud", files={"image": png(400, 560)}).json()["verdict"] in ("conforme", "suspect")
+
+
+def test_jeton_d_acces(monkeypatch):
+    monkeypatch.setattr(config, "API_TOKEN", "secret-de-test")
+    assert client.get("/api/health").status_code == 200  # publique
+    assert client.get("/api/referentiels/stats").status_code == 401
+    assert client.get("/api/referentiels/stats", headers={"Authorization": "Bearer mauvais"}).status_code == 401
+    assert client.get("/api/referentiels/stats", headers={"Authorization": "Bearer secret-de-test"}).status_code == 200
+
+
+def test_telechargement_sans_depot(monkeypatch, capsys):
+    from app.core import telechargement
+
+    monkeypatch.setattr(config, "HF_MODELES", "")
+    telechargement.telecharger()
+    assert "poids locaux" in capsys.readouterr().out

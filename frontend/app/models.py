@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone
 
 from flask_login import UserMixin
+from sqlalchemy.orm import deferred
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import db, login_manager
@@ -60,7 +61,10 @@ class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True, nullable=False)
     type = db.Column(db.String(20), nullable=False, default="ordonnance")
-    image = db.Column(db.String(120), nullable=False)  # nom du fichier dans instance/uploads/
+    image = db.Column(db.String(120), nullable=False)  # nom du fichier (sert d'adresse : /fichiers/<image>)
+    # Contenu de l'image, gardé en base : le disque des hébergeurs (Vercel) n'est pas conservé.
+    # Vide pour les documents plus anciens, dont l'image est dans instance/uploads/.
+    image_data = deferred(db.Column(db.LargeBinary))  # chargé seulement pour afficher l'image
     medecin = db.Column(db.String(200))
     texte = db.Column(db.Text, default="")
     numero = db.Column(db.String(50))  # numéro du bulletin de soins

@@ -1,5 +1,6 @@
 """Application Flask MediTrust : pages publiques, authentification, espace utilisateur."""
 
+import os
 from datetime import timedelta, timezone
 from pathlib import Path
 
@@ -19,7 +20,9 @@ HEURE_TUNISIE = timezone(timedelta(hours=1), "Africa/Tunis")
 
 
 def create_app(config=Config):
-    app = Flask(__name__, instance_path=str(Path(__file__).resolve().parent.parent / "instance"))
+    # Sur Vercel, seul /tmp est inscriptible : les images n'y passent que le temps de l'analyse.
+    instance = Path("/tmp/instance") if os.environ.get("VERCEL") else Path(__file__).resolve().parent.parent / "instance"
+    app = Flask(__name__, instance_path=str(instance))
     app.config.from_object(config)
     Path(app.instance_path).mkdir(exist_ok=True)
     if not app.config.get("SQLALCHEMY_DATABASE_URI"):

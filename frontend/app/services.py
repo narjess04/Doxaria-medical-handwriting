@@ -37,14 +37,20 @@ def _url(chemin):
     return current_app.config["BACKEND_URL"].rstrip("/") + chemin
 
 
+def _entetes():
+    # Jeton exigé par l'API en ligne (API_TOKEN du backend) ; inutile en local.
+    jeton = current_app.config.get("BACKEND_TOKEN")
+    return {"Authorization": f"Bearer {jeton}"} if jeton else {}
+
+
 def _get(chemin, timeout=5):
-    r = requests.get(_url(chemin), timeout=timeout)
+    r = requests.get(_url(chemin), timeout=timeout, headers=_entetes())
     r.raise_for_status()
     return r.json()
 
 
 def _post(chemin, timeout=60, **kwargs):
-    r = requests.post(_url(chemin), timeout=timeout, **kwargs)
+    r = requests.post(_url(chemin), timeout=timeout, headers=_entetes(), **kwargs)
     r.raise_for_status()
     return r.json()
 

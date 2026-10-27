@@ -144,15 +144,15 @@
     });
   });
 
-  // Photo prête à envoyer : remise à l'endroit (EXIF), 3000 px au plus, en JPEG.
+  // Photo prête à envoyer : remise à l'endroit (EXIF), 2400 px au plus, en JPEG.
   // Une photo de téléphone (souvent plus de 10 Mo, ou en HEIC sur iPhone) devient
-  // un JPEG de 1 à 2 Mo, bien assez net pour la lecture.
-  const COTE_MAX = 3000;
+  // un JPEG de 0,5 à 1,5 Mo, bien assez net pour la lecture (Vercel refuse plus de 4,5 Mo).
+  const COTE_MAX = 2400;
   async function preparer(file) {
     const types = ["image/jpeg", "image/png", "image/webp"];
     const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
     const echelle = Math.min(1, COTE_MAX / Math.max(bitmap.width, bitmap.height));
-    if (echelle === 1 && types.includes(file.type) && file.size <= 4 * 1048576) { bitmap.close(); return file; }
+    if (echelle === 1 && types.includes(file.type) && file.size <= 3 * 1048576) { bitmap.close(); return file; }
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(bitmap.width * echelle);
     canvas.height = Math.round(bitmap.height * echelle);

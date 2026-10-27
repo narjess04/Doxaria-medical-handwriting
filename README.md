@@ -87,11 +87,14 @@ Doxaria/
 │   │   ├── core/config.py     chemins des modèles, seuils, modèle de langage
 │   │   ├── chatbot/           RAG : référentiels, génération, réponses de repli
 │   │   └── pipeline/          prétraitement, CNN, YOLOv8, TrOCR, correction, fraude, bulletin
-│   ├── models/                poids des modèles (non versionnés)
+│   ├── models/                poids des modèles (non versionnés, publiés sur Hugging Face)
 │   └── tests/
 ├── frontend/                  site MediTrust (Flask)
 │   ├── app/                   comptes, outils, appels au backend, templates, CSS/JS
+│   ├── api/index.py           point d'entrée Vercel
+│   ├── vercel.json
 │   └── tests/
+├── deploy/                    mise en ligne : Space Hugging Face (Dockerfile) et script de publication
 ├── data/                      référentiels officiels
 ├── notebooks/                 Colab : datasets, fine-tuning TrOCR, YOLOv8, comparaison des OCR
 └── scripts/                   construction des référentiels
@@ -151,11 +154,77 @@ fois d'autoriser Python dans le pare-feu (réseau privé). Seul le frontend est
 exposé : il appelle le backend sur le PC.
 
 Le bouton « Prendre une photo » ouvre l'appareil photo du téléphone, même en
-HTTP. La photo est remise à l'endroit, réduite (3000 px au plus) et convertie
+HTTP. La photo est remise à l'endroit, réduite (2400 px au plus) et convertie
 en JPEG dans le navigateur avant l'envoi : les photos lourdes ou en HEIC
 (iPhone) passent. Sur ordinateur, le bouton « Webcam » affiche un aperçu en
 direct ; il n'apparaît qu'en HTTPS ou sur `localhost`, comme l'exige le
 navigateur pour accéder à la caméra.
+
+## Déploiement
+
+Le site est déployé en deux parties : les **modèles** sur Hugging Face, le
+**site web** (léger, sans modèle) sur Vercel.
+
+```
+ Navigateur ──► frontend Flask ─────────────── Vercel
+                    │  HTTPS + jeton d'accès
+                    ▼
+                API des modèles (backend) ──── Hugging Face Space (Docker)
+                    ▲
+                poids des modèles ──────────── dépôt de modèles Hugging Face
+```
+
+### 1. Hugging Face : poids et API
+
+1. Créer un compte sur [huggingface.co](https://huggingface.co), puis un jeton
+   d'accès de type **Write** dans *Settings → Access Tokens*.
+2. Depuis la racine du dépôt (PowerShell), avec le Python du backend :
+
+   ```powershell
+   $env:HF_TOKEN = "hf_..."
+   backend\.venv\Scripts\python deploy/publier.py modeles --depot <compte>/meditrust-modeles
+   backend\.venv\Scripts\python deploy/publier.py space --depot <compte>/meditrust-api --modeles <compte>/meditrust-modeles
+   ```
+
+   - `modeles` envoie le contenu de `backend/models/` (CNN, YOLOv8, TrOCR
+     fine-tuné) dans un dépôt de modèles ;
+   - `space` envoie le code du backend et les référentiels dans un Space
+     Docker ([`deploy/space/Dockerfile`](deploy/space/Dockerfile)), enregistre
+     les clés de `backend/.env` comme **secrets** du Space (elles ne sont jamais
+     dans les fichiers) et génère le **jeton d'accès** de l'API. Le script
+     affiche `BACKEND_URL` et `BACKEND_TOKEN` pour l'étape suivante.
+3. Le Space se construit en quelques minutes ; au démarrage, il télécharge les
+   poids depuis le dépôt de modèles. Vérifier :
+   `https://<compte>-meditrust-api.hf.space/api/health`.
+
+Pour republier après une modification, relancer `space` avec
+`--jeton <BACKEND_TOKEN>` afin de garder le même jeton.
+
+### 2. Base de données
+
+Créer une base PostgreSQL gratuite sur [neon.tech](https://neon.tech) et copier
+son adresse de connexion (`postgresql://…`). Les comptes, l'historique et les
+images y sont conservés : le disque de Vercel ne l'est pas.
+
+### 3. Vercel : site web
+
+1. Sur [vercel.com](https://vercel.com), *Add New → Project*, importer ce dépôt
+   GitHub et choisir **`frontend`** comme *Root Directory*.
+2. Variables d'environnement :
+
+   | Variable | Valeur |
+   |---|---|
+   | `BACKEND_URL` | adresse du Space, affichée par le script |
+   | `BACKEND_TOKEN` | jeton affiché par le script |
+   | `DATABASE_URL` | adresse PostgreSQL de Neon |
+   | `SECRET_KEY` | longue chaîne aléatoire (sessions) |
+   | `HTTPS` | `1` (cookies sécurisés) |
+
+3. *Deploy*. Le site est public : tout le monde peut l'utiliser, et le bouton
+   **« Essayer la démo sans compte »** permet de tester sans rien enregistrer.
+
+Le Space gratuit se met en veille après environ 48 h sans visite : la première
+analyse suivante attend alors une à deux minutes.
 
 ## Tests
 

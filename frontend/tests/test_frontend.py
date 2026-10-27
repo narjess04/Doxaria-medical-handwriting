@@ -231,3 +231,33 @@ def test_compte_demo_sans_mot_de_passe(app):
     c2 = app.test_client()
     r = c2.post("/auth/connexion", data={"email": "demo@meditrust.tn", "password": ""})
     assert "/espace" not in (r.location or "")
+
+
+# ---------- Déploiement ----------
+
+def test_jeton_envoye_au_backend(app, monkeypatch):
+    envoyes = []
+
+    class Reponse:
+        def raise_for_status(self): pass
+        def json(self): return {"status": "ok"}
+
+    monkeypatch.setattr(services.requests, "get", lambda url, **k: envoyes.append(k["headers"]) or Reponse())
+    with app.app_context():
+        services.etat_backend()
+        app.config["BACKEND_TOKEN"] = "jeton-test"
+        services.etat_backend()
+    assert envoyes == [{}, {"Authorization": "Bearer jeton-test"}]
+
+
+def test_image_gardee_en_base(app, client, backend):
+    from app.models import Document
+
+    envoyer(client)
+    assert not list((Path(app.instance_path) / "uploads").iterdir())  # rien sur le disque
+    with app.app_context():
+        doc = Document.query.one()
+        assert doc.image_data == JPEG
+        nom = doc.image
+    r = client.get(f"/fichiers/{nom}")
+    assert r.status_code == 200 and r.data == JPEG and r.mimetype == "image/jpeg"

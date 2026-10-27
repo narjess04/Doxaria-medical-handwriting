@@ -2,10 +2,11 @@
 
 import base64
 import json
+import mimetypes
 import uuid
 from pathlib import Path
 
-from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request,
+from flask import (Blueprint, Response, abort, current_app, flash, jsonify, redirect, render_template, request,
                    send_from_directory, url_for)
 from flask_login import current_user, login_required
 
@@ -86,8 +87,12 @@ def extraction():
                            date_document=res.get("date"), modele=res.get("modele"), created_at=maintenant())
             verifies = services.verifier_medicaments(doc.texte) if doc.type == "ordonnance" else []
             return render_template("outils/document.html", doc=doc, verifies=verifies, image_demo=image)
-        res = services.analyser_document(chemin, type_document)
-        doc = Document(user_id=current_user.id, type=res["type"], image=nom, medecin=res["medecin"],
+        try:
+            res = services.analyser_document(chemin, type_document)
+            image_data = chemin.read_bytes()
+        finally:
+            chemin.unlink(missing_ok=True)  # l'image est gardée en base, pas sur le disque
+        doc = Document(user_id=current_user.id, type=res["type"], image=nom, image_data=image_data, medecin=res["medecin"],
                        texte=res["texte"], numero=res["numero"], demo=res["demo"], boites=json.dumps(res.get("zones", [])),
                        date_document=res.get("date"), modele=res.get("modele"))
         db.session.add(doc)
@@ -125,8 +130,12 @@ def supprimer(doc_id):
 @bp.route("/fichiers/<nom>")
 def fichier(nom):
     # Seul le propriétaire du document peut voir son image.
-    if not Document.query.filter_by(image=nom, user_id=current_user.id).first():
+    doc = Document.query.filter_by(image=nom, user_id=current_user.id).first()
+    if doc is None:
         abort(404)
+    if doc.image_data:
+        return Response(doc.image_data, mimetype=mimetypes.guess_type(nom)[0] or "application/octet-stream",
+                        headers={"Cache-Control": "private, max-age=86400"})
     return send_from_directory(dossier_uploads(), nom)
 
 

@@ -21,7 +21,7 @@ MODELE_FRAUDE = MODELS_DIR / "fraude" / "docteur_cachet.pt"          # YOLOv8 : 
 MODELE_BULLETIN = MODELS_DIR / "bulletin" / "champs_bulletin.pt"     # YOLOv8 : 9 champs du bulletin
 # Détecteur de lignes : celui du notebook 03 s'il existe, sinon celui de l'ancienne version.
 MODELE_LIGNES = next((p for p in (MODELS_DIR / "yolo" / "doxaria-lignes.pt", MODELS_DIR / "yolo" / "lignes_texte.pt")
-                      if p.exists()), MODELS_DIR / "yolo" / "doxaria-lignes.pt")
+                      if p.exists() or p.with_suffix(".onnx").exists()), MODELS_DIR / "yolo" / "doxaria-lignes.pt")
 MODELE_DATE = MODELS_DIR / "ordonnance" / "date_texte.pt"            # YOLOv8 : date, text
 MODELE_TROCR = MODELS_DIR / "trocr-doxaria"                           # TrOCR fine-tuné (notebook 02)
 # En attendant le fine-tuning : TrOCR pré-entraîné sur l'écriture manuscrite (téléchargé une fois).

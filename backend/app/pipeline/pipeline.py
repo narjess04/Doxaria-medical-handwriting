@@ -7,7 +7,7 @@ from PIL import Image
 from app.chatbot.referentiels import medicaments_dans
 from app.core import config
 
-from . import bulletin, classification, correction, detection, lecture_api, recognition
+from . import bulletin, classification, correction, detection, lecture_api, modeles, recognition
 from .modeles import ModeleIndisponible
 from .preprocessing import recadrer
 
@@ -127,7 +127,7 @@ def extraire(image: Image.Image, type_document: str = "auto") -> dict:
     try:
         return {**commun, "lecture": True, "numero": None, **lire_ordonnance(image)}
     except ModeleIndisponible:
-        if not config.MODELE_LIGNES.exists():
+        if not modeles.present(config.MODELE_LIGNES):
             raise
         return {**commun, "lecture": False, "medecin": None, "date": None, "texte": "", "numero": None,
                 "champs": detection.lignes(image), "medicaments": [], "modele": None}

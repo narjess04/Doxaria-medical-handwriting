@@ -87,14 +87,15 @@ Doxaria/
 │   │   ├── core/config.py     chemins des modèles, seuils, modèle de langage
 │   │   ├── chatbot/           RAG : référentiels, génération, réponses de repli
 │   │   └── pipeline/          prétraitement, CNN, YOLOv8, TrOCR, correction, fraude, bulletin
-│   ├── models/                poids des modèles (non versionnés, publiés sur Hugging Face)
+│   ├── models/                poids .pt et .onnx (non versionnés, publiés sur Hugging Face)
 │   └── tests/
 ├── frontend/                  site MediTrust (Flask)
 │   ├── app/                   comptes, outils, appels au backend, templates, CSS/JS
 │   ├── api/index.py           point d'entrée Vercel
 │   ├── vercel.json
 │   └── tests/
-├── deploy/                    mise en ligne : Space Hugging Face (Dockerfile) et script de publication
+├── deploy/                    mise en ligne : Dockerfile de l'API (Render), publication des poids
+├── render.yaml                configuration Render de l'API
 ├── data/                      référentiels officiels
 ├── notebooks/                 Colab : datasets, fine-tuning TrOCR, YOLOv8, comparaison des OCR
 └── scripts/                   construction des référentiels
@@ -110,8 +111,7 @@ carte graphique.
 cd backend
 python -m venv .venv
 .venv\Scripts\activate             # Windows ; macOS/Linux : source .venv/bin/activate
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-pip install -r requirements.txt
+pip install -r requirements.txt   # léger : modèles au format ONNX
 uvicorn main:app --port 8000
 
 # 2. Frontend — http://127.0.0.1:5000 (dans un second terminal)
@@ -122,9 +122,19 @@ pip install -r requirements.txt
 python run.py
 ```
 
-Les poids des modèles ne sont pas dans le dépôt : il faut les placer dans
-`backend/models/` (voir le tableau ci-dessus). `GET /api/health` indique ceux
-qui sont présents.
+Les poids des modèles ne sont pas dans le dépôt : ils sont publiés sur
+[Hugging Face](https://huggingface.co/narjess05/meditrust-modeles), à placer dans
+`backend/models/`. `GET /api/health` indique ceux qui sont présents.
+
+**Deux formats de modèles.** Le backend exécute les modèles au format **ONNX**
+avec `onnxruntime` (~50 Mo) dès que le `.onnx` existe, sinon le `.pt` avec
+PyTorch. Pour entraîner, utiliser les `.pt` ou les convertir :
+
+```bash
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements-entrainement.txt          # PyTorch, Ultralytics, TrOCR, onnx
+python ../scripts/exporter_onnx.py                    # .pt -> .onnx, à côté des originaux
+```
 
 ### Configuration
 
@@ -162,51 +172,56 @@ navigateur pour accéder à la caméra.
 
 ## Déploiement
 
-Le site est déployé en deux parties : les **modèles** sur Hugging Face, le
-**site web** (léger, sans modèle) sur Vercel.
+Le site est déployé en trois parties, toutes sur des offres gratuites :
 
 ```
  Navigateur ──► frontend Flask ─────────────── Vercel
                     │  HTTPS + jeton d'accès
                     ▼
-                API des modèles (backend) ──── Hugging Face Space (Docker)
+                API (backend, modèles ONNX) ── Render (Docker)
                     ▲
                 poids des modèles ──────────── dépôt de modèles Hugging Face
 ```
 
-### 1. Hugging Face : poids et API
+L'API en ligne n'utilise pas PyTorch : le CNN et les YOLOv8 sont exécutés au
+format ONNX, ce qui tient dans les 512 Mo de mémoire de l'offre gratuite de Render.
+
+### 1. Hugging Face : poids des modèles
 
 1. Créer un compte sur [huggingface.co](https://huggingface.co), puis un jeton
    d'accès de type **Write** dans *Settings → Access Tokens*.
-2. Depuis la racine du dépôt (PowerShell), avec le Python du backend :
+2. Convertir les modèles en ONNX (voir *Installation*), puis, depuis la racine
+   du dépôt (PowerShell) :
 
    ```powershell
    $env:HF_TOKEN = "hf_..."
-   backend\.venv\Scripts\python deploy/publier.py modeles --depot <compte>/meditrust-modeles
-   backend\.venv\Scripts\python deploy/publier.py space --depot <compte>/meditrust-api --modeles <compte>/meditrust-modeles
+   backend\.venv\Scripts\python deploy/publier.py --depot <compte>/meditrust-modeles
    ```
 
-   - `modeles` envoie le contenu de `backend/models/` (CNN, YOLOv8, TrOCR
-     fine-tuné) dans un dépôt de modèles ;
-   - `space` envoie le code du backend et les référentiels dans un Space
-     Docker ([`deploy/space/Dockerfile`](deploy/space/Dockerfile)), enregistre
-     les clés de `backend/.env` comme **secrets** du Space (elles ne sont jamais
-     dans les fichiers) et génère le **jeton d'accès** de l'API. Le script
-     affiche `BACKEND_URL` et `BACKEND_TOKEN` pour l'étape suivante.
-3. Le Space se construit en quelques minutes ; au démarrage, il télécharge les
-   poids depuis le dépôt de modèles. Vérifier :
-   `https://<compte>-meditrust-api.hf.space/api/health`.
+   Le contenu de `backend/models/` (`.pt` et `.onnx`) est envoyé dans un dépôt
+   de modèles public. L'API ne télécharge que les `.onnx` à son démarrage.
 
-Pour republier après une modification, relancer `space` avec
-`--jeton <BACKEND_TOKEN>` afin de garder le même jeton.
+### 2. Render : API
 
-### 2. Base de données
+1. Créer un compte sur [render.com](https://render.com) avec GitHub.
+2. *New → Blueprint*, choisir ce dépôt : Render lit [`render.yaml`](render.yaml)
+   et construit [`deploy/Dockerfile`](deploy/Dockerfile).
+3. Render demande la valeur des clés marquées `sync: false` : recopier celles de
+   `backend/.env`. Le jeton d'accès `API_TOKEN` est généré automatiquement.
+4. Une fois le service *Live* : `https://meditrust-api.onrender.com/api/health`
+   (l'adresse exacte est affichée par Render). Noter cette adresse et la valeur
+   de `API_TOKEN` (*Environment* du service).
 
-Créer une base PostgreSQL gratuite sur [neon.tech](https://neon.tech) et copier
-son adresse de connexion (`postgresql://…`). Les comptes, l'historique et les
-images y sont conservés : le disque de Vercel ne l'est pas.
+L'offre gratuite se met en veille après 15 minutes sans visite : la première
+analyse suivante attend alors environ une minute.
 
-### 3. Vercel : site web
+### 3. Base de données
+
+Créer une base PostgreSQL gratuite sur [neon.tech](https://neon.tech) (région
+Europe) et copier son adresse de connexion (`postgresql://…`). Les comptes,
+l'historique et les images y sont conservés : le disque de Vercel ne l'est pas.
+
+### 4. Vercel : site web
 
 1. Sur [vercel.com](https://vercel.com), *Add New → Project*, importer ce dépôt
    GitHub et choisir **`frontend`** comme *Root Directory*.
@@ -214,17 +229,14 @@ images y sont conservés : le disque de Vercel ne l'est pas.
 
    | Variable | Valeur |
    |---|---|
-   | `BACKEND_URL` | adresse du Space, affichée par le script |
-   | `BACKEND_TOKEN` | jeton affiché par le script |
+   | `BACKEND_URL` | adresse de l'API sur Render |
+   | `BACKEND_TOKEN` | valeur de `API_TOKEN` sur Render |
    | `DATABASE_URL` | adresse PostgreSQL de Neon |
    | `SECRET_KEY` | longue chaîne aléatoire (sessions) |
    | `HTTPS` | `1` (cookies sécurisés) |
 
 3. *Deploy*. Le site est public : tout le monde peut l'utiliser, et le bouton
    **« Essayer la démo sans compte »** permet de tester sans rien enregistrer.
-
-Le Space gratuit se met en veille après environ 48 h sans visite : la première
-analyse suivante attend alors une à deux minutes.
 
 ## Tests
 

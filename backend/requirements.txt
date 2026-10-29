@@ -4,19 +4,19 @@ python-multipart>=0.0.9
 requests>=2.31
 python-dotenv>=1.0
 Pillow>=10.0
+rapidfuzz>=3.0
 
-# Modèles de vision, sur CPU. Pour éviter la version CUDA (plusieurs Go) :
-# pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-torch>=2.2
-torchvision>=0.17
-ultralytics>=8.2
+# Modèles (CNN, YOLOv8) au format ONNX : ~50 Mo au lieu de plus de 1 Go pour PyTorch.
+# Les .onnx sont produits par scripts/exporter_onnx.py (voir requirements-entrainement.txt).
+numpy>=1.26
+onnxruntime>=1.18
 
-# Lecture des ordonnances, quand le TrOCR fine-tuné sera dans models/trocr-doxaria/
-# transformers>=4.40
+# Téléchargement des poids depuis Hugging Face (serveur en ligne)
+huggingface_hub>=0.23
 
 # Facultatif : OCR imprimé (cachet, numéro de bulletin). Nécessite aussi le programme
 # Tesseract avec la langue française : https://github.com/UB-Mannheim/tesseract/wiki
-# pytesseract>=0.3
+pytesseract>=0.3
 
 # Tests
 httpx>=0.27

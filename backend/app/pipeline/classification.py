@@ -2,7 +2,10 @@
 
 from functools import lru_cache
 
+import numpy as np
 from PIL import Image
+
+from app.core import config
 
 from . import modeles
 
@@ -44,11 +47,23 @@ def OrdonnanceClassifierCNN():
 
 def classer(image: Image.Image) -> tuple[str, float]:
     """(type de document, probabilité)."""
+    entree = image.convert("RGB").resize((TAILLE, TAILLE), Image.BILINEAR)
+    if onnx := modeles.version_onnx(config.MODELE_CLASSIFICATION):
+        # Même entrée que to_tensor : RGB entre 0 et 1, canaux en premier.
+        x = (np.asarray(entree, dtype=np.float32) / 255).transpose(2, 0, 1)[None]
+        session = modeles.session_onnx(onnx)
+        with modeles.verrou("cnn"):
+            logits = session.run(None, {session.get_inputs()[0].name: x})[0][0]
+        probas = np.exp(logits - logits.max())
+        probas /= probas.sum()
+        i = int(probas.argmax())
+        return CLASSES[i], round(float(probas[i]), 4)
+
     import torch
     from torchvision.transforms.functional import to_tensor
 
     modele = modeles.cnn()
-    x = to_tensor(image.convert("RGB").resize((TAILLE, TAILLE), Image.BILINEAR)).unsqueeze(0)
+    x = to_tensor(entree).unsqueeze(0)
     with modeles.verrou("cnn"), torch.inference_mode():
         probas = torch.softmax(modele(x), dim=1)[0]
     i = int(probas.argmax())

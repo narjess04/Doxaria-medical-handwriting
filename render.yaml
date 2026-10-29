@@ -1,0 +1,25 @@
+# Render (Blueprint) : API MediTrust, offre gratuite. Voir README, « Déploiement ».
+services:
+  - type: web
+    name: meditrust-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: HF_MODELES
+        value: narjess05/meditrust-modeles
+      - key: API_TOKEN          # jeton partagé avec le frontend (BACKEND_TOKEN sur Vercel)
+        generateValue: true
+      - key: LLM_API_KEY        # valeurs demandées par Render à la création, jamais dans le dépôt
+        sync: false
+      - key: LLM_BASE_URL
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+      - key: OCR_API_KEY
+        sync: false
+      - key: OCR_MODEL
+        sync: false
